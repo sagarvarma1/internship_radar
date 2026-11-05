@@ -58,7 +58,7 @@ def load_settings(path: str | Path | None = None) -> Settings:
     if os.environ.get("RADAR_ALERT_CHANNELS"):
         a["channels"] = [x.strip() for x in os.environ["RADAR_ALERT_CHANNELS"].split(",") if x.strip()]
     return Settings(
-        filters=FilterConfig.from_dict(raw.get("filters"), raw.get("profile")),
+        filters=FilterConfig.from_dict(raw.get("filters"), _load_profile(raw.get("profile"), path)),
         alerts=AlertConfig(**a),
         poll=PollConfig(**(raw.get("poll") or {})),
         db_path=Path(os.environ.get("RADAR_DB", raw.get("db_path") or ROOT / "data" / "radar.db")),
@@ -66,6 +66,19 @@ def load_settings(path: str | Path | None = None) -> Settings:
             os.environ.get("RADAR_REGISTRY", raw.get("registry_path") or ROOT / "registry.yaml")
         ),
     )
+
+
+def _load_profile(base: dict | None, config_path: Path) -> dict:
+    """Profile values are personal (GPA, citizenship), so they can stay out of the repo:
+    RADAR_PROFILE (JSON or YAML string, e.g. an Orbit secret) or a git-ignored
+    profile.local.yaml next to config.yaml override the `profile` section key by key."""
+    profile = dict(base or {})
+    local = config_path.parent / "profile.local.yaml"
+    if local.exists():
+        profile.update(yaml.safe_load(local.read_text()) or {})
+    if os.environ.get("RADAR_PROFILE"):
+        profile.update(yaml.safe_load(os.environ["RADAR_PROFILE"]) or {})  # YAML parses JSON too
+    return profile
 
 
 def load_registry(path: str | Path) -> list[Company]:

@@ -102,7 +102,9 @@ Then run `radar validate`.
 ## Your profile: eligibility checks
 
 Internship applications ask the same eligibility questions, and postings state the same
-requirements. `config.yaml` → `profile` holds your answers. Each posting's stated requirements are
+requirements. Your answers go in `profile.local.yaml` (git-ignored; same keys as `config.yaml` →
+`profile`) or, when deployed, the `RADAR_PROFILE` env var as JSON, e.g.
+`{"graduation": "2028-05", "degree_level": "bs", "gpa": 3.7}`. Each posting's stated requirements are
 extracted and checked against them:
 
 | Profile key | Example | What postings say (verbatim from live postings) | Check |

@@ -3,6 +3,8 @@
 
 # Your eligibility, checked against what each posting states. Leave a field null/empty to skip
 # that check. A posting that doesn't mention a requirement is never excluded by it.
+# Keep real values out of this public file: put them in profile.local.yaml (git-ignored) or the
+# RADAR_PROFILE env var (JSON), which override these keys.
 profile:
   graduation: null          # expected graduation "YYYY-MM", e.g. "2028-05"
   degree_level: null        # bs | ms | phd | mba
