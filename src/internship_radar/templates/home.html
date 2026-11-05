@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block style %}
+.hero { padding: 36px 0 28px; }
+.hero h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.1; letter-spacing: -.025em; margin: 0 0 14px; font-weight: 750; max-width: 640px; }
+.hero p { font-size: 17px; color: var(--muted); margin: 0 0 22px; max-width: 560px; }
+.signup { display: flex; gap: 8px; max-width: 460px; }
+.signup input { flex: 1; min-width: 0; padding: 11px 14px; }
+.signup .btn { padding: 11px 18px; }
+.stats { margin-top: 18px; color: var(--muted); font-size: 13.5px; display: flex; gap: 6px 16px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin: 6px 0 14px; overflow-x: auto; scrollbar-width: none; }
+.tabs a { padding: 10px 12px; color: var(--muted); font-weight: 550; font-size: 14px; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tabs a:hover { color: var(--text); }
+.tabs a.on { color: var(--text); border-color: var(--text); }
+.tabs .n { color: var(--faint); font-weight: 500; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.tools { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.tools input[type=search] { flex: 1 1 220px; min-width: 0; }
+.tools select { flex: 0 1 auto; padding-right: 28px; }
+.jobs { list-style: none; margin: 0; padding: 0; }
+.job { display: grid; grid-template-columns: 40px 1fr auto; gap: 14px; padding: 16px; border-bottom: 1px solid var(--line); align-items: start; }
+.jobs .job:first-child { border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
+.jobs .job:last-child { border-bottom: 0; }
+.job:hover { background: var(--hover); }
+.job.hidden-row { display: none; }
+.logo { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; font-size: 16px;
+  color: hsl(var(--h) 55% 40%); background: hsl(var(--h) 80% 95%); }
+@media (prefers-color-scheme: dark) { .logo { color: hsl(var(--h) 70% 75%); background: hsl(var(--h) 40% 16%); } }
+.company { font-size: 13.5px; color: var(--muted); font-weight: 500; }
+.title { display: block; font-size: 16px; font-weight: 620; color: var(--text); line-height: 1.35; margin: 1px 0 4px; letter-spacing: -.005em; }
+.title:hover { color: var(--accent); }
+.meta { font-size: 13.5px; color: var(--muted); }
+.meta a.loc { color: var(--muted); text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.meta a.loc:hover { color: var(--accent); text-decoration-color: currentColor; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.chip { font-size: 12px; padding: 2px 8px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.chip.money { color: var(--good); border-color: color-mix(in srgb, var(--good) 30%, var(--line)); }
+.badge-new { font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 1px 6px; border-radius: 5px; margin-left: 6px; letter-spacing: .02em; }
+.side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; min-width: 92px; }
+.age { font-size: 13px; color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.age.fresh { color: var(--good); font-weight: 600; }
+.acts { display: flex; gap: 4px; }
+.ico { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--faint);
+  display: grid; place-items: center; cursor: pointer; padding: 0; }
+.ico svg { width: 15px; height: 15px; }
+.ico:hover { color: var(--text); }
+.ico.on[data-s=interested] { color: #ca8a04; border-color: #ca8a04; background: color-mix(in srgb, #ca8a04 10%, var(--panel)); }
+.ico.on[data-s=applied] { color: var(--good); border-color: var(--good); background: var(--good-soft); }
+.ico.on[data-s=skipped] { color: var(--bad); border-color: var(--bad); background: var(--bad-soft); }
+.why { margin-top: 8px; font-size: 13px; }
+.why summary { color: var(--muted); cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 4px; }
+.why summary::-webkit-details-marker { display: none; }
+.why summary:hover { color: var(--text); }
+.why ul { margin: 6px 0 0; padding: 0; list-style: none; }
+.why li { padding: 2px 0; color: var(--muted); }
+.why li.ok { color: var(--good); }
+.why li.warn { color: var(--warn); }
+.why li.fail { color: var(--bad); }
+.empty { padding: 48px 16px; text-align: center; color: var(--muted); }
+.empty b { display: block; color: var(--text); font-size: 16px; margin-bottom: 4px; }
+@media (max-width: 640px) {
+  .job { grid-template-columns: 1fr auto; padding: 14px; gap: 10px; }
+  .logo { display: none; }
+  .side { min-width: 0; }
+  .signup { flex-direction: column; }
+  .tools select { flex: 1 1 30%; }
+}
+{% endblock %}
+{% block body %}
+
+{% if not user %}
+<section class="hero">
+  <h1>Every new tech internship, the minute it's posted.</h1>
+  <p>We check {{ stats.companies }} companies' job boards every minute. Tell us what you're eligible for, and we'll email you the moment a match goes live, plus a short digest each night.</p>
+  <form class="signup" method="post" action="/login">
+    <input type="email" name="email" placeholder="you@school.edu" required autocomplete="email" aria-label="Email">
+    <button class="btn" type="submit">Get alerts, free</button>
+  </form>
+  <div class="stats"><span><span class="live"></span> {% if stats.last_poll %}Checked {{ stats.last_poll | age }}{% if stats.last_poll|age != "now" %} ago{% endif %}{% else %}Starting up{% endif %}</span><span>{{ counts.all }} open internships</span><span>No password, no spam, unsubscribe in one click</span></div>
+</section>
+{% elif needs_profile %}
+<div class="notice" style="margin-bottom:16px"><span>Add your graduation date and degree so "For you" only shows roles you qualify for.</span><a class="btn small" href="/settings">Finish profile</a></div>
+{% endif %}
+
+<nav class="tabs">
+  {% if user %}<a href="/?tab=foryou" class="{% if tab == 'foryou' %}on{% endif %}">For you<span class="n">{{ counts.foryou }}</span></a>{% endif %}
+  <a href="/?tab=all" class="{% if tab == 'all' %}on{% endif %}">All internships<span class="n">{{ counts.all }}</span></a>
+  {% if user %}
+  <a href="/?tab=saved" class="{% if tab == 'saved' %}on{% endif %}">Saved<span class="n">{{ counts.saved }}</span></a>
+  <a href="/?tab=applied" class="{% if tab == 'applied' %}on{% endif %}">Applied<span class="n">{{ counts.applied }}</span></a>
+  {% if counts.hidden %}<a href="/?tab=hidden" class="{% if tab == 'hidden' %}on{% endif %}">Hidden<span class="n">{{ counts.hidden }}</span></a>{% endif %}
+  {% endif %}
+</nav>
+
+<div class="tools">
+  <input type="search" id="q" placeholder="Search company, role or city" aria-label="Search">
+  <select id="term" aria-label="Term"><option value="">Any term</option>{% for t in terms %}<option value="{{ t }}">{{ t.replace("-", " ")|title }}</option>{% endfor %}</select>
+  <select id="role" aria-label="Role"><option value="">Any role</option>{% for k, v in ROLE_LABELS.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select>
+  <select id="sort" aria-label="Sort"><option value="new">Newest</option>{% if user %}<option value="score">Best match</option>{% endif %}<option value="pay">Highest pay</option></select>
+</div>
+
+{% if rows %}
+<ul class="jobs card" id="jobs">
+{% for r in rows %}
+{% set pay = r.requirements.get("pay_hourly") %}
+<li class="job" data-uids="{{ r.uids|join(' ') }}" data-seen="{{ r.fresh_at }}" data-score="{{ r.score }}" data-pay="{{ pay[1] if pay else 0 }}"
+    data-roles="{{ r.roles|join(' ') }}" data-terms="{% for s, y in r.requirements.get('terms', []) %}{{ s or '' }}-{{ y }} {% endfor %}"
+    data-text="{{ (r.company ~ ' ' ~ r.title ~ ' ' ~ r.locations|join(' ') ~ ' ' ~ (r.team or ''))|lower }}">
+  <div class="logo" style="--h:{{ (r.company|sum_ord) % 360 }}">{{ r.company[0]|upper }}</div>
+  <div>
+    <div class="company">{{ r.company }}{% if r.is_new %}<span class="badge-new">NEW</span>{% endif %}</div>
+    <a class="title" href="{{ r.apply_url }}" target="_blank" rel="noopener">{{ r.title }}</a>
+    {% if r.variants|length > 1 %}
+    <div class="meta">{% for v in r.variants %}<a class="loc" href="{{ v.apply_url }}" target="_blank" rel="noopener">{{ v.locations[0] if v.locations else "Location " ~ loop.index }}</a>{% if not loop.last %} · {% endif %}{% endfor %}{% if r.remote in ("remote", "hybrid") %} · {{ r.remote|title }}{% endif %}</div>
+    {% else %}
+    <div class="meta">{{ r.locations[:3]|join(" · ") or "Location not listed" }}{% if r.locations|length > 3 %} +{{ r.locations|length - 3 }}{% endif %}{% if r.remote in ("remote", "hybrid") %} · {{ r.remote|title }}{% endif %}</div>
+    {% endif %}
+    {% if r.chips %}<div class="chips">{% for c in r.chips %}<span class="chip{% if c.startswith('$') %} money{% endif %}">{{ c }}</span>{% endfor %}</div>{% endif %}
+    {% if user and r.checks %}
+    <details class="why"><summary>{% if r.passes %}Why it fits you{% else %}Why it's not a match{% endif %} <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3" stroke="currentColor" fill="none" stroke-width="1.5"/></svg></summary>
+      <ul>{% for x in r.checks %}<li class="{% if x.startswith('✓') %}ok{% elif x.startswith('⚠') %}warn{% else %}fail{% endif %}">{{ x.replace('filtered: ', '✕ ') }}</li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+  </div>
+  <div class="side">
+    {% set a = r.fresh_at|age %}<span class="age{% if (a.endswith('m') and not a.endswith('mo')) or a == 'now' or a.endswith('h') %} fresh{% endif %}" title="Posted {{ r.fresh_at[:10] }}">{{ a }}</span>
+    {% if user %}
+    <div class="acts">
+      <button class="ico{% if r.status == 'interested' %} on{% endif %}" data-s="interested" title="Save" aria-label="Save"><svg viewBox="0 0 16 16"><path d="M4 2h8v12l-4-3-4 3z" fill="currentColor"/></svg></button>
+      <button class="ico{% if r.status == 'applied' %} on{% endif %}" data-s="applied" title="Mark applied" aria-label="Mark applied"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>
+      <button class="ico{% if r.status == 'skipped' %} on{% endif %}" data-s="skipped" title="Hide" aria-label="Hide"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2"/></svg></button>
+    </div>
+    {% endif %}
+    <a class="btn small ghost" href="{{ r.apply_url }}" target="_blank" rel="noopener">Apply</a>
+  </div>
+</li>
+{% endfor %}
+</ul>
+<div class="empty card" id="none" style="display:none"><b>No internships match that search</b>Try a different word or clear a filter.</div>
+{% else %}
+<div class="empty card">
+  {% if tab == "foryou" %}<b>No matches yet</b>Nothing open right now fits your profile. We'll email you the moment one does. <a href="/settings">Adjust your profile</a>
+  {% elif tab == "saved" %}<b>Nothing saved</b>Tap the bookmark on any internship to keep it here.
+  {% elif tab == "applied" %}<b>No applications tracked</b>Tap the check mark after you apply.
+  {% else %}<b>Nothing here yet</b>The first check of every board is running. Refresh in a minute.{% endif %}
+</div>
+{% endif %}
+
+<script>
+(() => {
+  const list = document.getElementById("jobs");
+  if (!list) return;
+  const rows = [...list.children];
+  const q = document.getElementById("q"), term = document.getElementById("term"),
+        role = document.getElementById("role"), sort = document.getElementById("sort"),
+        none = document.getElementById("none");
+  // "summer-2027" matches postings tagged summer-2027, or tagged only with the year ("-2027")
+  const termMatch = (terms, t) => { const toks = terms.split(" "); return toks.includes(t) || toks.includes("-" + t.split("-")[1]); };
+  function apply() {
+    const words = q.value.toLowerCase().split(/\s+/).filter(Boolean);
+    let shown = 0;
+    for (const r of rows) {
+      const ok = words.every(w => r.dataset.text.includes(w))
+        && (!term.value || termMatch(r.dataset.terms, term.value))
+        && (!role.value || r.dataset.roles.split(" ").includes(role.value));
+      r.classList.toggle("hidden-row", !ok);
+      shown += ok;
+    }
+    none.style.display = shown ? "none" : "block";
+    list.style.display = shown ? "" : "none";
+  }
+  function order() {
+    const key = sort.value;
+    const val = r => key === "new" ? r.dataset.seen : parseFloat(r.dataset[key] || 0);
+    rows.sort((a, b) => val(a) < val(b) ? 1 : val(a) > val(b) ? -1 : 0);
+    rows.forEach(r => list.appendChild(r));
+  }
+  q.addEventListener("input", apply);
+  [term, role].forEach(el => el.addEventListener("change", apply));
+  sort.addEventListener("change", order);
+  list.addEventListener("click", async e => {
+    const btn = e.target.closest(".ico");
+    if (!btn) return;
+    const row = btn.closest(".job"), turningOff = btn.classList.contains("on");
+    const status = turningOff ? "new" : btn.dataset.s;
+    const results = await Promise.all(row.dataset.uids.split(" ").map(uid =>
+      fetch(`/api/postings/${encodeURIComponent(uid)}/status`, {
+        method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({status})})));
+    if (!results.every(r => r.ok)) return;
+    row.querySelectorAll(".ico").forEach(b => b.classList.toggle("on", !turningOff && b === btn));
+    if (status === "skipped") { row.style.transition = "opacity .2s"; row.style.opacity = 0; setTimeout(() => row.remove(), 200); }
+  });
+})();
+</script>
+{% endblock %}

@@ -21,64 +21,44 @@ ROOT = Path.cwd() if (Path.cwd() / "registry.yaml").exists() else Path(__file__)
 
 @dataclass
 class AlertConfig:
-    channels: list[str] = field(default_factory=list)  # email, discord, slack, console
-    batch_threshold: int = 3  # more than this many alerts at once -> one digest message
-    min_score: float = 0.0  # alert only on passing postings at or above this score
-    email_to: list[str] = field(default_factory=list)
-    public_url: str | None = None  # web app URL, linked from digests
+    batch_threshold: int = 3  # more than this many matches in one minute -> one combined email
 
 
 @dataclass
 class PollConfig:
-    interval_minutes: int = 10
-    concurrency: int = 6
-    per_host_interval_seconds: float = 1.0
+    interval_minutes: float = 1
+    concurrency: int = 12
+    per_host_interval_seconds: float = 0.3  # ~3 req/s per ATS host; most answers are 304s
     max_backoff_hours: float = 6.0
 
 
 @dataclass
 class Settings:
-    filters: FilterConfig
+    filters: FilterConfig  # defaults for new users and anonymous visitors
     alerts: AlertConfig
     poll: PollConfig
     db_path: Path
     registry_path: Path
+    site_url: str  # public URL, used in emails (RADAR_SITE_URL)
+    secure_cookies: bool  # true when served over https
 
 
 def load_settings(path: str | Path | None = None) -> Settings:
     path = Path(path or os.environ.get("RADAR_CONFIG", ROOT / "config.yaml"))
     raw = yaml.safe_load(path.read_text()) if path.exists() else {}
     raw = raw or {}
-    a = dict(raw.get("alerts") or {})
-    # Recipients may also come from env so the public repo doesn't hold personal contact info.
-    if os.environ.get("RADAR_EMAIL_TO"):
-        a["email_to"] = [x.strip() for x in os.environ["RADAR_EMAIL_TO"].split(",")]
-    if os.environ.get("RADAR_PUBLIC_URL"):
-        a["public_url"] = os.environ["RADAR_PUBLIC_URL"]
-    if os.environ.get("RADAR_ALERT_CHANNELS"):
-        a["channels"] = [x.strip() for x in os.environ["RADAR_ALERT_CHANNELS"].split(",") if x.strip()]
+    site = os.environ.get("RADAR_SITE_URL", raw.get("site_url") or "http://localhost:8000").rstrip("/")
     return Settings(
-        filters=FilterConfig.from_dict(raw.get("filters"), _load_profile(raw.get("profile"), path)),
-        alerts=AlertConfig(**a),
+        filters=FilterConfig.from_dict(raw.get("filters")),
+        alerts=AlertConfig(**(raw.get("alerts") or {})),
         poll=PollConfig(**(raw.get("poll") or {})),
         db_path=Path(os.environ.get("RADAR_DB", raw.get("db_path") or ROOT / "data" / "radar.db")),
         registry_path=Path(
             os.environ.get("RADAR_REGISTRY", raw.get("registry_path") or ROOT / "registry.yaml")
         ),
+        site_url=site,
+        secure_cookies=site.startswith("https://"),
     )
-
-
-def _load_profile(base: dict | None, config_path: Path) -> dict:
-    """Profile values are personal (GPA, citizenship), so they can stay out of the repo:
-    RADAR_PROFILE (JSON or YAML string, e.g. an Orbit secret) or a git-ignored
-    profile.local.yaml next to config.yaml override the `profile` section key by key."""
-    profile = dict(base or {})
-    local = config_path.parent / "profile.local.yaml"
-    if local.exists():
-        profile.update(yaml.safe_load(local.read_text()) or {})
-    if os.environ.get("RADAR_PROFILE"):
-        profile.update(yaml.safe_load(os.environ["RADAR_PROFILE"]) or {})  # YAML parses JSON too
-    return profile
 
 
 def load_registry(path: str | Path) -> list[Company]:

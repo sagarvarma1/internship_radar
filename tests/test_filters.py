@@ -55,6 +55,7 @@ def test_internship_titles(title):
     # new-grad / full-time roles with a season in the title
     "Sales Development Representative - Summer 2027 Graduates",
     "Campus Full Time 2027 - Quantitative Trader",
+    "Senior Recruiter, University and Alternative Channels",
     "Software Engineer I, Entry-Level (Graduation Fall 2026 – Summer 2027)",
     "Senior Software Engineer",
     "Co-operative Partnerships Manager",

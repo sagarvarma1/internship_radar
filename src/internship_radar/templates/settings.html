@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Settings · Internship Radar{% endblock %}
+{% block style %}
+.page { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 26px; letter-spacing: -.02em; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 22px; }
+.sec { padding: 22px; margin-bottom: 16px; }
+.sec h2 { font-size: 16px; margin: 0 0 2px; }
+.sec .hint { color: var(--muted); font-size: 13.5px; margin: 0 0 16px; }
+.field { margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+.field > label, .field > .label { display: block; font-weight: 550; font-size: 14px; margin-bottom: 6px; }
+.field .sub { color: var(--muted); font-size: 12.5px; margin-top: 5px; }
+.field input[type=text], .field input[type=number], .field input[type=month], .field select { width: 100%; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pills label { position: relative; }
+.pills input { position: absolute; opacity: 0; pointer-events: none; }
+.pills span { display: inline-block; padding: 7px 13px; border: 1px solid var(--line); border-radius: 999px; font-size: 14px;
+  cursor: pointer; background: var(--panel); color: var(--text); user-select: none; transition: all .12s; }
+.pills span:hover { border-color: var(--faint); }
+.pills input:checked + span { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pills input:focus-visible + span { box-shadow: 0 0 0 3px var(--accent-soft); }
+.toggle { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+.toggle input { appearance: none; -webkit-appearance: none; width: 40px; height: 24px; border-radius: 99px; background: var(--line);
+  position: relative; cursor: pointer; flex: none; transition: background .15s; margin: 0; }
+.toggle input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff;
+  transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.toggle input:checked { background: var(--accent); }
+.toggle input:checked::after { transform: translateX(16px); }
+.toggle b { display: block; font-weight: 550; font-size: 14px; }
+.toggle small { color: var(--muted); font-size: 13px; }
+.save { position: sticky; bottom: 0; padding: 14px 0; background: linear-gradient(transparent, var(--bg) 30%); display: flex; gap: 10px; align-items: center; }
+.save .btn { padding: 11px 22px; }
+.danger { margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--line); }
+.danger button { background: none; border: 1px solid var(--line); color: var(--bad); }
+.danger button:hover { background: var(--bad-soft); color: var(--bad); }
+@media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } }
+{% endblock %}
+{% block body %}
+<div class="page">
+{% if welcome %}
+  <h1>Welcome! Two minutes of setup</h1>
+  <p class="lead">These are the questions internship applications ask. We check every posting's requirements against your answers, so you only hear about roles you can actually apply to. Anything you skip is simply not checked.</p>
+{% else %}
+  <h1>Settings</h1>
+  <p class="lead">Signed in as {{ user.email }}</p>
+{% endif %}
+{% if saved %}<div class="notice good" style="margin-bottom:16px">Saved. Your "For you" list is updated.</div>{% endif %}
+{% for e in errors %}<div class="notice bad" style="margin-bottom:16px">{{ e }}</div>{% endfor %}
+
+<form method="post" action="/settings">
+{% if welcome %}<input type="hidden" name="welcome" value="1">{% endif %}
+
+<section class="sec card">
+  <h2>School</h2>
+  <p class="hint">Matched against "graduating between…", degree, major and GPA requirements.</p>
+  <div class="row2">
+    <div class="field"><label for="graduation">Expected graduation</label>
+      <input type="month" id="graduation" name="graduation" value="{{ p.graduation or '' }}" min="2025-01" max="2035-12"></div>
+    <div class="field"><label for="gpa">GPA <span class="muted" style="font-weight:400">(optional)</span></label>
+      <input type="number" id="gpa" name="gpa" step="0.01" min="0" max="5" placeholder="3.70" value="{{ p.gpa if p.gpa is not none else '' }}"></div>
+  </div>
+  <div class="field"><span class="label">Degree you're pursuing</span>
+    <div class="pills">{% for k, v in [("bs", "Bachelor's"), ("ms", "Master's"), ("phd", "PhD"), ("mba", "MBA")] %}
+      <label><input type="radio" name="degree_level" value="{{ k }}" {% if p.degree_level == k %}checked{% endif %}><span>{{ v }}</span></label>{% endfor %}</div></div>
+  <div class="field"><label for="majors">Major(s)</label>
+    <input type="text" id="majors" name="majors" placeholder="Computer Science, Mathematics" value="{{ p.majors|join(', ') }}">
+    <div class="sub">Separate with commas. Postings that list other majors (with "or related field") are flagged, not hidden.</div></div>
+  <div class="field"><span class="label">Where is your school?</span>
+    <div class="pills">{% for k, v in [("US", "United States"), ("CA", "Canada"), ("", "Elsewhere / skip")] %}
+      <label><input type="radio" name="school_country" value="{{ k }}" {% if (p.school_country or '') == k %}checked{% endif %}><span>{{ v }}</span></label>{% endfor %}</div></div>
+</section>
+
+<section class="sec card">
+  <h2>Work eligibility</h2>
+  <p class="hint">Many internships are limited to US citizens or US persons (export rules), or don't sponsor visas. Never shared with anyone.</p>
+  <div class="field"><span class="label">Citizenship</span>
+    <div class="pills">{% for k, v in [("us_citizen", "US citizen"), ("permanent_resident", "Green card holder"), ("other", "Other"), ("", "Skip")] %}
+      <label><input type="radio" name="citizenship" value="{{ k }}" {% if (p.citizenship or '') == k %}checked{% endif %}><span>{{ v }}</span></label>{% endfor %}</div></div>
+  <div class="field"><span class="label">Will you need visa sponsorship, now or later?</span>
+    <div class="pills">{% for k, v in [("no", "No"), ("yes", "Yes"), ("", "Skip")] %}
+      {% set cur = "yes" if p.needs_sponsorship is sameas true else ("no" if p.needs_sponsorship is sameas false else "") %}
+      <label><input type="radio" name="needs_sponsorship" value="{{ k }}" {% if cur == k %}checked{% endif %}><span>{{ v }}</span></label>{% endfor %}</div></div>
+  <div class="field"><span class="label">Security clearance</span>
+    <div class="pills">{% for k, v in [("none", "None"), ("eligible", "Could get one"), ("active", "Have an active one"), ("", "Skip")] %}
+      <label><input type="radio" name="clearance" value="{{ k }}" {% if (p.clearance or '') == k %}checked{% endif %}><span>{{ v }}</span></label>{% endfor %}</div>
+    <div class="sub">US citizens are treated as able to get one.</div></div>
+</section>
+
+<section class="sec card">
+  <h2>What you're looking for</h2>
+  <p class="hint">Leave terms empty to see every term.</p>
+  <div class="field"><span class="label">Terms</span>
+    <div class="pills">{% for t in terms %}
+      <label><input type="checkbox" name="terms" value="{{ t }}" {% if t in p.terms %}checked{% endif %}><span>{{ t.replace("-", " ")|title }}</span></label>{% endfor %}</div></div>
+  <div class="field"><span class="label">Roles</span>
+    <div class="pills">{% for k, v in roles.items() %}
+      <label><input type="checkbox" name="role_types" value="{{ k }}" {% if k in f.role_types %}checked{% endif %}><span>{{ v }}</span></label>{% endfor %}</div></div>
+  <div class="field"><span class="label">Location</span>
+    <div class="pills">
+      <label><input type="radio" name="location_scope" value="us" {% if f.countries %}checked{% endif %}><span>United States</span></label>
+      <label><input type="radio" name="location_scope" value="anywhere" {% if not f.countries %}checked{% endif %}><span>Anywhere</span></label>
+      <label><input type="checkbox" name="allow_remote" {% if f.allow_remote %}checked{% endif %}><span>Include remote</span></label>
+    </div></div>
+  <div class="row2">
+    <div class="field"><label for="cities">Favorite cities <span class="muted" style="font-weight:400">(ranked higher)</span></label>
+      <input type="text" id="cities" name="preferred_cities" placeholder="San Francisco, New York" value="{{ f.preferred_cities|join(', ') }}"></div>
+    <div class="field"><label for="pay">Minimum pay ($/hr)</label>
+      <input type="number" id="pay" name="min_hourly_pay" min="0" max="500" step="1" placeholder="Any" value="{{ p.min_hourly_pay|int if p.min_hourly_pay else '' }}">
+      <div class="sub">Only applied when a posting lists pay.</div></div>
+  </div>
+  <div class="field"><span class="label">Rank these companies higher</span>
+    <div class="pills">{% for t in tags %}
+      <label><input type="checkbox" name="preferred_tags" value="{{ t }}" {% if t in f.preferred_tags %}checked{% endif %}><span>{{ {"ai-lab": "AI labs", "ai": "AI startups", "infra": "Infrastructure", "devtools": "Dev tools", "fintech": "Fintech", "quant": "Quant", "robotics": "Robotics", "defense": "Defense", "space": "Space", "hardware": "Hardware", "security": "Security", "product": "Consumer & product", "big-tech": "Big tech", "target": "Featured"}.get(t, t) }}</span></label>{% endfor %}</div></div>
+</section>
+
+<section class="sec card">
+  <h2>Emails</h2>
+  <p class="hint">Every email has a one-click unsubscribe.</p>
+  <div class="field"><label class="toggle"><input type="checkbox" name="instant_alerts" {% if user.instant_alerts %}checked{% endif %}>
+    <span><b>The moment a match is posted</b><small>We check every minute. If several land at once, you get one email.</small></span></label></div>
+  <div class="field"><label class="toggle"><input type="checkbox" name="nightly_digest" {% if user.nightly_digest %}checked{% endif %}>
+    <span><b>Nightly digest</b><small>One email with everything that matched today. Skipped on days with nothing new.</small></span></label></div>
+  <div class="row2">
+    <div class="field"><label for="hour">Digest time</label>
+      <select id="hour" name="digest_hour">{% for h in range(16, 24) %}<option value="{{ h }}" {% if user.digest_hour == h %}selected{% endif %}>{{ (h - 12) }}:00 pm</option>{% endfor %}</select></div>
+    <div class="field"><label for="tz">Time zone</label>
+      <select id="tz" name="timezone">{% for z in timezones %}<option value="{{ z }}" {% if user.timezone == z %}selected{% endif %}>{{ z.split("/")[-1].replace("_", " ") }}</option>{% endfor %}</select></div>
+  </div>
+</section>
+
+<div class="save"><button class="btn" type="submit">{% if welcome %}Save and see my matches{% else %}Save{% endif %}</button>
+  {% if not welcome %}<a href="/" class="small muted">Cancel</a>{% endif %}</div>
+</form>
+
+<div class="danger">
+  <form method="post" action="/account/delete" onsubmit="return this.querySelector('input').value === 'delete'">
+    <div class="field"><label for="del" class="small muted" style="font-weight:400">Delete your account and all your data. Type <b>delete</b> to confirm.</label>
+      <div style="display:flex;gap:8px"><input type="text" id="del" placeholder="delete" style="max-width:160px"><button class="btn small" type="submit">Delete account</button></div></div>
+  </form>
+</div>
+</div>
+{% endblock %}

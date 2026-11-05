@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Check your email · Internship Radar{% endblock %}
+{% block style %}
+.auth { max-width: 400px; margin: 48px auto; padding: 28px; text-align: center; }
+.auth h1 { font-size: 22px; margin: 10px 0 6px; letter-spacing: -.015em; }
+.auth p { color: var(--muted); margin: 0 0 20px; font-size: 14.5px; }
+.code { width: 100%; text-align: center; font-size: 24px !important; letter-spacing: .4em; padding: 12px !important;
+  font-variant-numeric: tabular-nums; margin-bottom: 10px; }
+.auth .btn { width: 100%; padding: 11px; }
+.err { color: var(--bad); font-size: 14px; margin: -4px 0 12px; }
+.mail { width: 44px; height: 44px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; margin: 0 auto; }
+{% endblock %}
+{% block body %}
+<div class="auth card">
+  <div class="mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
+  <h1>Check your email</h1>
+  <p>We sent a sign-in link to <b style="color:var(--text)">{{ email }}</b>. Click it, or type the 6-digit code here.</p>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  <form method="post" action="/auth/code">
+    <input type="hidden" name="email" value="{{ email }}">
+    <input class="code" type="text" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" required autofocus aria-label="6-digit code">
+    <button class="btn" type="submit">Sign in</button>
+  </form>
+  <p class="small" style="margin:16px 0 0">Nothing arrived? Check spam, or <a href="/login?email={{ email|urlencode }}">send another</a>.</p>
+</div>
+{% endblock %}

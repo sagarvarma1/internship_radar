@@ -53,6 +53,12 @@ class Profile:
             _parse_term_key(t)
         return cls(**d)
 
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+    def is_empty(self) -> bool:
+        return all(v in (None, [], False) for k, v in asdict(self).items() if k != "strict_majors")
+
     @property
     def grad_ym(self) -> tuple[int, int] | None:
         return _parse_ym(self.graduation) if self.graduation else None
@@ -114,6 +120,20 @@ class Requirements:
         d = asdict(self)
         return {k: v for k, v in d.items() if v not in (None, False, [], ())}
 
+    @classmethod
+    def from_json(cls, d: dict | None) -> Requirements:
+        """Inverse of to_json (JSON turns tuples into lists)."""
+        d = dict(d or {})
+        if d.get("grad_window"):
+            d["grad_window"] = tuple(tuple(x) for x in d["grad_window"])
+        for k in ("weeks", "pay_hourly"):
+            if d.get(k):
+                d[k] = tuple(d[k])
+        if d.get("terms"):
+            d["terms"] = [tuple(t) for t in d["terms"]]
+        return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
+
+
     def chips(self) -> list[str]:
         """Short labels for the UI and alerts."""
         out = []
@@ -168,6 +188,8 @@ def _fmt_ym(ym: tuple[int, int]) -> str:
 
 def _fmt_window(w) -> str:
     lo, hi = w
+    if lo[1] == 1 and hi[1] == 12 and lo[0] > 1900 and hi[0] < 2100:  # whole years
+        return str(lo[0]) if lo[0] == hi[0] else f"{lo[0]}–{hi[0]}"
     if lo == (1900, 1):
         return f"by {_fmt_ym(hi)}"
     if hi == (2100, 12):

@@ -24,20 +24,21 @@ def coverage_data(settings: Settings) -> dict:
              and not (states.get(c.key) and states[c.key]["last_success_at"])]
     q = conn.execute(
         """SELECT COUNT(*) AS postings, COALESCE(SUM(is_internship),0) AS internships,
-                  COALESCE(SUM(passes),0) AS matches, COUNT(DISTINCT CASE WHEN is_internship=1
+                  COUNT(DISTINCT CASE WHEN is_internship=1
                   THEN company_key END) AS intern_companies
            FROM postings WHERE closed_at IS NULL"""
     ).fetchone()
     top = conn.execute(
-        """SELECT company, COUNT(*) AS n, SUM(passes) AS m FROM postings
+        """SELECT company, COUNT(*) AS n FROM postings
            WHERE closed_at IS NULL AND is_internship=1 GROUP BY company ORDER BY n DESC LIMIT 15"""
     ).fetchall()
     last_run = conn.execute("SELECT * FROM poll_runs ORDER BY id DESC LIMIT 1").fetchone()
+    users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
     conn.close()
     return dict(
         companies=companies, per_ats=per_ats, unsupported=unsupported, broken=broken, never=never,
-        open_postings=q["postings"], open_internships=q["internships"], matches=q["matches"],
-        intern_companies=q["intern_companies"], top=top, last_run=last_run,
+        open_postings=q["postings"], open_internships=q["internships"],
+        intern_companies=q["intern_companies"], top=top, last_run=last_run, users=users,
     )
 
 
@@ -51,13 +52,13 @@ def coverage_report(settings: Settings, markdown: bool = False) -> str:
         "Tracked per ATS: " + ", ".join(f"{k} {v}" for k, v in sorted(d["per_ats"].items())),
         f"Open postings tracked: {d['open_postings']}",
         f"Open internships: {d['open_internships']} at {d['intern_companies']} companies",
-        f"Internships matching your filters: {d['matches']}",
+        f"Users: {d['users']}",
     ]
     if d["last_run"]:
         r = d["last_run"]
         lines.append(f"Last poll: {r['finished_at'] or r['started_at']} ({r['ok']} ok, {r['failed']} failed)")
     lines += ["", "## Most internships" if markdown else "MOST INTERNSHIPS"]
-    lines += [f"- {r['company']}: {r['n']} ({r['m']} match)" for r in d["top"]]
+    lines += [f"- {r['company']}: {r['n']}" for r in d["top"]]
     lines += ["", "## Broken boards" if markdown else "BROKEN BOARDS"]
     lines += [f"- {r['name']} ({r['ats']}:{r['slug']}): {r['consecutive_failures']} failures, {r['last_error']}"
               for r in d["broken"]] or ["- none"]

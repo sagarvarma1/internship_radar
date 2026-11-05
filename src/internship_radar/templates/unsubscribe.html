@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Unsubscribe · Internship Radar{% endblock %}
+{% block body %}
+<div class="card" style="max-width:420px;margin:48px auto;padding:28px;text-align:center">
+  {% if not found %}
+    <h1 style="font-size:20px;margin:0 0 8px">Link not recognized</h1>
+    <p class="muted">This unsubscribe link is invalid, or the account was deleted.</p>
+  {% elif done %}
+    <h1 style="font-size:20px;margin:0 0 8px">You're unsubscribed</h1>
+    <p class="muted">You won't get any more emails. You can turn alerts back on anytime in <a href="/settings">Settings</a>.</p>
+  {% else %}
+    <h1 style="font-size:20px;margin:0 0 8px">Stop all emails?</h1>
+    <p class="muted" style="margin:0 0 18px">This turns off instant alerts and the nightly digest.</p>
+    <form method="post" action="/unsubscribe/{{ token }}"><button class="btn" type="submit">Unsubscribe</button></form>
+  {% endif %}
+</div>
+{% endblock %}

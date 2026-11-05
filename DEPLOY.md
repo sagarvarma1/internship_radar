@@ -3,9 +3,14 @@
 Radar needs three things from a host:
 
 1. A long-running **web process** (`radar serve --port $PORT`).
-2. A **scheduled job** every 10 minutes (`radar poll --spread 300`).
+2. A **scheduled job every minute** (`radar poll`, ~35 s per run; a run skips itself if the
+   previous one is still going).
 3. A **persistent disk** shared by both, holding one SQLite file (`RADAR_DB`, WAL mode, so the web
-   app and poller can use it at the same time).
+   app and poller can use it at the same time). It holds user accounts, so back it up.
+
+And from you: an email sender. For a public site use [Resend](https://resend.com) with a domain
+you control (add its DNS records so mail isn't flagged as spam), then set `RESEND_API_KEY` and
+`EMAIL_FROM`. Set `RADAR_SITE_URL` to the public https URL.
 
 ## Orbit
 
@@ -20,7 +25,7 @@ written against them. This is the behaviour it assumes, so the Orbit side can be
 | `web.healthcheck` | GET path that must return 200 before traffic switches to a new deploy |
 | `crons[].schedule` | Standard 5-field cron, UTC |
 | `crons[].command` | Runs in the same image, env and volumes as `web` |
-| `crons[].timeoutSeconds` | Kill after this long (a poll takes ~2 min after the first run) |
+| `crons[].timeoutSeconds` | Kill after this long (a poll takes ~35 s) |
 | `crons[].concurrency: "forbid"` | Skip a tick if the previous run is still going |
 | `volumes[]` | Persistent disk mounted into web *and* crons, surviving redeploys |
 | `env` | Plain (non-secret) env vars; secrets set in the dashboard/API |
@@ -28,10 +33,10 @@ written against them. This is the behaviour it assumes, so the Orbit side can be
 Steps once those land:
 
 1. Create the project from this repo in the Orbit dashboard (GitHub App).
-2. Set secrets: `RADAR_PASSWORD`, `RADAR_EMAIL_TO`, `RADAR_PUBLIC_URL`, and the SMTP (or
-   Resend) variables from the README.
+2. Set env/secrets: `RADAR_SITE_URL`, `EMAIL_FROM`, `RESEND_API_KEY` (or the SMTP variables).
 3. Push to the production branch. The first cron run baselines every board without alerting.
-4. Check `/health` and `/healthz` (`poll_stale` should be `false` within ~10 minutes).
+4. Check `/healthz`: `poll_stale` should be `false` within a couple of minutes and `mail` should
+   say `resend` or `smtp` (not `console`). Sign up yourself and send `radar test-email`.
 
 ### Rough edges noted while building against Orbit
 
@@ -41,7 +46,8 @@ From using Orbit as a user (landing page, README, `docs/self-hosting.md`):
   endpoint", but only JS/TS functions run. A Python user finds out after reading the README's
   framework detection rules.
 * **No background work.** No cron, no workers, no queue. Any app that polls, sends digests or cleans
-  up needs an external scheduler. This is the main blocker for Radar.
+  up needs an external scheduler. This is the main blocker for Radar, which needs a job every
+  minute (so sub-5-minute schedules matter, as does "skip if still running").
 * **No persistent storage for apps.** Functions can't write to disk and there's no managed
   database, so even a tiny SQLite app has nowhere to keep state.
 * **No Orbit-native config file.** Only `vercel.json` is read. A project needing a start command,
@@ -60,8 +66,8 @@ From using Orbit as a user (landing page, README, `docs/self-hosting.md`):
 docker build -t internship-radar .
 docker volume create radar
 docker run -d --name radar-web -v radar:/data -p 8000:8000 --env-file .env internship-radar
-# cron on the host, every 10 minutes:
-*/10 * * * * docker run --rm -v radar:/data --env-file /path/.env internship-radar radar poll --spread 300
+# cron on the host, every minute:
+* * * * * docker run --rm -v radar:/data --env-file /path/.env internship-radar radar poll
 ```
 
 Or a single container that polls forever: `docker run -d -v radar:/data --env-file .env internship-radar radar worker`.

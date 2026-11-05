@@ -10,11 +10,11 @@ import time
 from datetime import UTC, datetime, timedelta
 
 from . import db
-from .alerts import run_alerts
+from . import alerts
 from .ats import board_url, parse
 from .config import Settings, load_registry
 from .fetch import Fetcher, HostLimiter
-from .filters import evaluate
+from .filters import analyze
 from .models import ATS, Company
 
 
@@ -54,8 +54,8 @@ async def poll_company(
     except Exception as e:
         db.record_failure(conn, company.key, f"parse error: {type(e).__name__}: {e}")
         return {"company": company.name, "status": "error", "error": str(e)}
-    scored = [(p, evaluate(p, settings.filters, company.tags)) for p in postings]
-    counts = db.apply_snapshot(conn, company.key, res.etag, scored)
+    analyzed = [(p, analyze(p)) for p in postings]
+    counts = db.apply_snapshot(conn, company.key, res.etag, analyzed)
     return {"company": company.name, "status": "ok", **counts}
 
 
@@ -70,6 +70,14 @@ async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str
         targets = [c for c in targets if c.name.lower() in wanted or (c.slug or "").lower() in wanted]
     at = datetime.now(UTC)
     targets = [c for c in targets if _due(db.get_company_state(conn, c.key), settings, at)]
+
+    # Polling every minute: never overlap with a run that's still going (a crashed run that never
+    # finished stops blocking after 5 minutes).
+    recent = (datetime.now(UTC) - timedelta(minutes=5)).isoformat(timespec="seconds")
+    if conn.execute("SELECT 1 FROM poll_runs WHERE finished_at IS NULL AND started_at>?",
+                    (recent,)).fetchone():
+        conn.close()
+        return {"skipped": "previous run still in progress", "companies": 0, "ok": 0}
 
     run_id = conn.execute(
         "INSERT INTO poll_runs (started_at, companies) VALUES (?, ?)", (db.now(), len(targets))
@@ -99,10 +107,11 @@ async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str
         if own_fetcher:
             await fetcher.aclose()
 
-    # Don't alert on stale backlog (e.g. alerts were misconfigured for days).
-    cutoff = (datetime.now(UTC) - timedelta(days=2)).isoformat(timespec="seconds")
-    conn.execute("UPDATE postings SET alert_pending=0 WHERE alert_pending=1 AND first_seen_at<?", (cutoff,))
-    alert_status = run_alerts(conn, settings.alerts) if send_alerts else {}
+    alert_status = {}
+    if send_alerts:
+        tags = {c.key: c.tags for c in companies}
+        alert_status = alerts.run(conn, settings, tags)
+    db.cleanup(conn)
 
     ok = sum(r["status"] != "error" for r in results)
     summary = {
@@ -110,26 +119,27 @@ async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str
         "ok": ok,
         "failed": len(results) - ok,
         "new_postings": sum(r.get("new", 0) for r in results),
-        "new_matches": sum(r.get("new_matches", 0) for r in results),
+        "new_internships": sum(r.get("new_internships", 0) for r in results),
         "closed": sum(r.get("closed", 0) for r in results),
         "seconds": round(time.monotonic() - start, 1),
         "alerts": alert_status,
         "errors": [f"{r['company']}: {r.get('error')}" for r in results if r["status"] == "error"],
     }
     conn.execute(
-        """UPDATE poll_runs SET finished_at=?, ok=?, failed=?, new_postings=?, new_matches=?
-           WHERE id=?""",
-        (db.now(), ok, summary["failed"], summary["new_postings"], summary["new_matches"], run_id),
+        """UPDATE poll_runs SET finished_at=?, ok=?, failed=?, new_postings=?, new_internships=?,
+             emails_sent=? WHERE id=?""",
+        (db.now(), ok, summary["failed"], summary["new_postings"], summary["new_internships"],
+         alert_status.get("instant_emails", 0) + alert_status.get("digests", 0), run_id),
     )
     conn.close()
     return summary
 
 
 async def worker(settings: Settings) -> None:
-    """Long-running mode: one cycle every interval, each cycle spread over ~80% of the interval."""
+    """Long-running alternative to cron: one cycle per interval, spread over ~75% of it."""
     interval = settings.poll.interval_minutes * 60
     while True:
         started = time.monotonic()
-        summary = await poll_all(settings, spread_seconds=interval * 0.8)
+        summary = await poll_all(settings, spread_seconds=interval * 0.75)
         print(f"{datetime.now(UTC):%Y-%m-%d %H:%M:%S} {summary}", flush=True)
         await asyncio.sleep(max(5.0, interval - (time.monotonic() - started)))

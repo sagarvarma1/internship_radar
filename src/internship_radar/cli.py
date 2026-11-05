@@ -6,13 +6,12 @@ import argparse
 import asyncio
 import json
 import sys
-from dataclasses import replace
 
 from . import db
 from .config import load_registry, load_settings, save_registry
 from .discover import discover_name, discover_url
 from .fetch import Fetcher
-from .filters import evaluate
+from .filters import analyze
 from .models import ATS, Company
 
 
@@ -108,34 +107,44 @@ def cmd_report(args, settings) -> int:
     return 0
 
 
-def cmd_rescore(args, settings) -> int:
+def cmd_reanalyze(args, settings) -> int:
     conn = db.connect(settings.db_path)
-    tags = {c.key: c.tags for c in load_registry(settings.registry_path)}
-    n = db.rescore_all(conn, lambda p: evaluate(p, settings.filters, tags.get(p.company_key, ())))
-    print(f"rescored {n} postings")
+    n = db.reanalyze_all(conn, analyze)
+    print(f"re-analyzed {n} postings")
     return 0
 
 
-def cmd_test_alert(args, settings) -> int:
-    """Send one real, currently-open matching posting to a channel, ignoring dedupe."""
-    from .alerts import deliver, pending_alerts
+def cmd_test_email(args, settings) -> int:
+    """Send a real email (the newest open internship) to check the mail setup."""
+    from datetime import UTC, datetime
+
+    from . import mailer
+    from .alerts import build_message
+    from .models import Alert, Remote
 
     conn = db.connect(settings.db_path)
-    row = conn.execute(
-        "SELECT uid FROM postings WHERE closed_at IS NULL AND passes=1 ORDER BY score DESC LIMIT 1"
-    ).fetchone()
-    if not row:
-        print("no open matching postings in the DB yet; run `radar poll` first", file=sys.stderr)
+    r = conn.execute("SELECT * FROM postings WHERE closed_at IS NULL AND is_internship=1 "
+                     "ORDER BY first_seen_at DESC LIMIT 1").fetchone()
+    if not r:
+        print("no open internships yet; run `radar poll` first", file=sys.stderr)
         return 1
-    conn.execute("UPDATE postings SET alert_pending=1 WHERE uid=?", (row["uid"],))
-    alerts = [a for a in pending_alerts(conn, f"test-{args.channel}", 0) if a.uid == row["uid"]]
-    conn.execute("UPDATE postings SET alert_pending=0 WHERE uid=?", (row["uid"],))
-    cfg = replace(settings.alerts, batch_threshold=1)
-    a = alerts[0]
-    a.title = f"[TEST] {a.title}"
-    deliver(conn, cfg, args.channel, [a])
-    conn.execute("DELETE FROM alert_deliveries WHERE uid=? AND channel=?", (a.uid, args.channel))
-    print(f"sent test alert for {a.company}: {a.title} via {args.channel}")
+    a = Alert(r["uid"], r["company"], f"[TEST] {r['title']}", json.loads(r["locations"]), Remote(r["remote"]),
+              r["apply_url"], 0, ["test email from `radar test-email`"], datetime.now(UTC), json.loads(r["chips"]))
+    mailer.send(build_message(args.to, [a], settings.site_url, f"{settings.site_url}/settings"))
+    print(f"sent via {mailer.backend()} to {args.to}")
+    return 0
+
+
+def cmd_users(args, settings) -> int:
+    conn = db.connect(settings.db_path)
+    rows = conn.execute("""SELECT u.id, u.created_at, u.last_login_at, u.instant_alerts, u.nightly_digest,
+                             (SELECT COUNT(*) FROM user_alerts a WHERE a.user_id=u.id AND a.sent_at LIKE '20%') sent
+                           FROM users u ORDER BY u.id""").fetchall()
+    print(f"{len(rows)} users")
+    for r in rows:  # no emails printed: keep personal data out of logs
+        print(f"  #{r['id']} joined {r['created_at'][:10]}, last login {(r['last_login_at'] or '')[:10]}, "
+              f"instant={'on' if r['instant_alerts'] else 'off'}, digest={'on' if r['nightly_digest'] else 'off'}, "
+              f"{r['sent']} alerts sent")
     return 0
 
 
@@ -151,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--config", help="path to config.yaml (default: $RADAR_CONFIG or ./config.yaml)")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    s = sub.add_parser("poll", help="poll every board once, then send alerts (for cron)")
+    s = sub.add_parser("poll", help="poll every board once, then send alerts (cron, every minute)")
     s.add_argument("--spread", type=float, default=0, help="spread requests over N seconds")
     s.add_argument("--only", nargs="*", help="only these companies (name or slug)")
     s.add_argument("--no-alerts", action="store_true")
@@ -174,12 +183,15 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--markdown", action="store_true")
     s.set_defaults(fn=cmd_report)
 
-    s = sub.add_parser("rescore", help="re-run filters on stored postings after a config change")
-    s.set_defaults(fn=cmd_rescore)
+    s = sub.add_parser("reanalyze", help="re-run internship detection/requirement extraction")
+    s.set_defaults(fn=cmd_reanalyze)
 
-    s = sub.add_parser("test-alert", help="send the top real match to one channel as a test")
-    s.add_argument("channel", choices=["email", "discord", "slack", "console"])
-    s.set_defaults(fn=cmd_test_alert)
+    s = sub.add_parser("test-email", help="send a real test alert email")
+    s.add_argument("to", help="recipient address")
+    s.set_defaults(fn=cmd_test_email)
+
+    s = sub.add_parser("users", help="list users (no emails shown)")
+    s.set_defaults(fn=cmd_users)
 
     s = sub.add_parser("serve", help="run the web app")
     s.add_argument("--host", default="0.0.0.0")

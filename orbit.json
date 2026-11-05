@@ -11,14 +11,14 @@
   "crons": [
     {
       "name": "poll",
-      "schedule": "*/10 * * * *",
-      "command": "uv run --no-dev radar poll --spread 300",
-      "timeoutSeconds": 540,
+      "schedule": "* * * * *",
+      "command": "uv run --no-dev radar poll",
+      "timeoutSeconds": 55,
       "concurrency": "forbid"
     }
   ],
   "volumes": [
-    { "name": "radar-data", "mountPath": "/data", "sizeGB": 1 }
+    { "name": "radar-data", "mountPath": "/data", "sizeGB": 2 }
   ],
   "env": {
     "RADAR_DB": "/data/radar.db"

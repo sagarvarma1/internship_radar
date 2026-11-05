@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Companies · Internship Radar{% endblock %}
+{% block style %}
+h1 { font-size: 26px; letter-spacing: -.02em; margin: 0 0 4px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 18px 0 24px; }
+.stat { padding: 14px 16px; }
+.stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.stat span { color: var(--muted); font-size: 13px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 14px; }
+th { color: var(--muted); font-weight: 550; font-size: 12.5px; }
+tr:last-child td { border-bottom: 0; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--good); }
+.dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+h2 { font-size: 16px; margin: 28px 0 10px; }
+.uns { color: var(--muted); font-size: 14px; line-height: 1.8; }
+@media (max-width: 560px) { .hide-sm { display: none; } th, td { padding: 9px 10px; } }
+{% endblock %}
+{% block body %}
+<h1>Companies we watch</h1>
+<p class="muted" style="margin:0">Every board below is checked every minute. Last check {{ stats.last_poll | age }}{% if stats.last_poll and stats.last_poll|age != "now" %} ago{% endif %}.</p>
+<div class="stats">
+  <div class="stat card"><b>{{ rows|length }}</b><span>companies</span></div>
+  <div class="stat card"><b>{{ data.open_internships }}</b><span>open internships</span></div>
+  {% for ats, n in per_ats.items() %}<div class="stat card"><b>{{ n }}</b><span>on {{ ats|title }}</span></div>{% endfor %}
+</div>
+<div class="card" style="overflow-x:auto"><table>
+<thead><tr><th>Company</th><th class="num">Internships</th><th class="num hide-sm">All jobs</th><th>Status</th></tr></thead>
+<tbody>{% for r in rows %}<tr>
+  <td><b>{{ r.name }}</b></td>
+  <td class="num">{{ r.open_internships }}</td>
+  <td class="num hide-sm muted">{{ r.open_postings }}</td>
+  <td class="small">{% if r.consecutive_failures >= 3 %}<span class="dot bad"></span>Not responding{% elif r.consecutive_failures %}<span class="dot warn"></span>Retrying{% elif r.last_success_at %}<span class="dot"></span><span class="muted">{{ r.last_success_at|age }}</span>{% else %}<span class="muted">Pending</span>{% endif %}</td>
+</tr>{% endfor %}</tbody></table></div>
+<h2>Not covered</h2>
+<p class="uns">These companies don't publish a public job board we can read (they use Workday or their own site), so we don't track them: {% for c in data.unsupported %}{{ c.name }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>
+{% endblock %}

@@ -1,42 +1,23 @@
-# Internship Radar configuration. Secrets (SMTP / Resend keys) come from env vars; see README.
-# After changing `profile` or `filters`, run `radar rescore` to re-apply them to stored postings.
+# Internship Radar site configuration. Secrets (email provider keys) come from env vars; see README.
+# Each user's eligibility profile, filters and email preferences live in the database and are
+# edited on the site's Settings page. `filters` below are the defaults for new users and visitors.
 
-# Your eligibility, checked against what each posting states. Leave a field null/empty to skip
-# that check. A posting that doesn't mention a requirement is never excluded by it.
-# Keep real values out of this public file: put them in profile.local.yaml (git-ignored) or the
-# RADAR_PROFILE env var (JSON), which override these keys.
-profile:
-  graduation: null          # expected graduation "YYYY-MM", e.g. "2028-05"
-  degree_level: null        # bs | ms | phd | mba
-  majors: []                # e.g. [computer science, mathematics]
-  gpa: null                 # e.g. 3.7
-  citizenship: null         # us_citizen | permanent_resident | other
-  needs_sponsorship: null   # true if you need visa sponsorship now or later (F-1/OPT -> H-1B)
-  clearance: null           # none | eligible | active (US citizens count as eligible)
-  school_country: null      # country of your university, e.g. US
-  terms: []                 # internship terms you want, e.g. [summer-2027, fall-2027]
-  min_hourly_pay: null      # USD/hour; postings that state less are excluded
-  strict_majors: false      # true: exclude when a posting lists majors (even "or related") without yours
+site_url: http://localhost:8000   # overridden by RADAR_SITE_URL in production
 
 filters:
-  # Which roles count. Options: swe, ml, research, applied_science, data, hardware
-  role_types: [swe, ml, research, applied_science]
-  # Accepted job locations (ISO codes or names). [] = anywhere.
+  role_types: [swe, ml, research, applied_science]   # also: data, hardware
   countries: [US]
-  allow_remote: true            # fully-remote internships pass, but score lower than hybrid/onsite
-  allow_unknown_location: true  # keep postings whose location can't be determined
-  preferred_cities: []          # e.g. [San Francisco, New York, Seattle] -> +5
-  preferred_tags: [target, ai-lab]  # registry tags that get +5
+  allow_remote: true
+  allow_unknown_location: true
+  preferred_cities: []
+  preferred_tags: [target, ai-lab]
   min_score: 0
 
 alerts:
-  channels: [email]             # email, discord, slack, console
-  batch_threshold: 3            # more than 3 at once -> one digest email
-  min_score: 0
-  # Recipient: set RADAR_EMAIL_TO (kept out of the public repo).
+  batch_threshold: 3   # more than 3 matches in the same minute -> one combined email
 
 poll:
-  interval_minutes: 10
-  concurrency: 6
-  per_host_interval_seconds: 1.0
+  interval_minutes: 1
+  concurrency: 12
+  per_host_interval_seconds: 0.3
   max_backoff_hours: 6

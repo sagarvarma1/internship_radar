@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Internship Radar{% endblock %}
+{% block style %}
+.auth { max-width: 400px; margin: 48px auto; padding: 28px; }
+.auth h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: -.015em; }
+.auth p { color: var(--muted); margin: 0 0 20px; font-size: 14.5px; }
+.auth input { width: 100%; margin-bottom: 10px; padding: 11px 14px; }
+.auth .btn { width: 100%; padding: 11px; }
+.err { color: var(--bad); font-size: 14px; margin: -4px 0 12px; }
+{% endblock %}
+{% block body %}
+<div class="auth card">
+  <h1>Sign in or sign up</h1>
+  <p>Enter your email and we'll send you a sign-in link and code. No password needed.</p>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  <form method="post" action="/login">
+    <input type="email" name="email" value="{{ email }}" placeholder="you@school.edu" required autofocus autocomplete="email" aria-label="Email">
+    <button class="btn" type="submit">Email me a sign-in link</button>
+  </form>
+</div>
+{% endblock %}
