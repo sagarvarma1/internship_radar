@@ -1,28 +1,37 @@
-# Internship Radar configuration. Secrets (SMTP/Twilio/webhooks) come from env vars; see README.
-# After changing `filters`, run `radar rescore` to re-apply them to stored postings.
+# Internship Radar configuration. Secrets (SMTP / Resend keys) come from env vars; see README.
+# After changing `profile` or `filters`, run `radar rescore` to re-apply them to stored postings.
+
+# Your eligibility, checked against what each posting states. Leave a field null/empty to skip
+# that check. A posting that doesn't mention a requirement is never excluded by it.
+profile:
+  graduation: null          # expected graduation "YYYY-MM", e.g. "2028-05"
+  degree_level: null        # bs | ms | phd | mba
+  majors: []                # e.g. [computer science, mathematics]
+  gpa: null                 # e.g. 3.7
+  citizenship: null         # us_citizen | permanent_resident | other
+  needs_sponsorship: null   # true if you need visa sponsorship now or later (F-1/OPT -> H-1B)
+  clearance: null           # none | eligible | active (US citizens count as eligible)
+  school_country: null      # country of your university, e.g. US
+  terms: []                 # internship terms you want, e.g. [summer-2027, fall-2027]
+  min_hourly_pay: null      # USD/hour; postings that state less are excluded
+  strict_majors: false      # true: exclude when a posting lists majors (even "or related") without yours
 
 filters:
   # Which roles count. Options: swe, ml, research, applied_science, data, hardware
   role_types: [swe, ml, research, applied_science]
-  # Accepted countries (ISO codes or names). [] = anywhere.
+  # Accepted job locations (ISO codes or names). [] = anywhere.
   countries: [US]
   allow_remote: true            # fully-remote internships pass, but score lower than hybrid/onsite
   allow_unknown_location: true  # keep postings whose location can't be determined
   preferred_cities: []          # e.g. [San Francisco, New York, Seattle] -> +5
-  graduation_years: []          # e.g. [2027]; postings stating a window that excludes these fail
-  degree_levels: [bs, ms]       # bs, ms, phd, mba; postings limited to other levels fail
   preferred_tags: [target, ai-lab]  # registry tags that get +5
   min_score: 0
 
 alerts:
-  # Any of: email, sms, discord, slack, console
-  channels: []
-  batch_threshold: 3            # more than 3 at once -> one digest message per channel
+  channels: [email]             # email, discord, slack, console
+  batch_threshold: 3            # more than 3 at once -> one digest email
   min_score: 0
-  sms_max_items: 5
-  sms_quiet_hours: [23, 7]      # SMS held (not dropped) from 11pm to 7am
-  timezone: America/Los_Angeles
-  # Recipients: set RADAR_EMAIL_TO / RADAR_SMS_TO env vars (kept out of the public repo).
+  # Recipient: set RADAR_EMAIL_TO (kept out of the public repo).
 
 poll:
   interval_minutes: 10

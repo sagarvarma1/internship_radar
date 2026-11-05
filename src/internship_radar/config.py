@@ -21,14 +21,10 @@ ROOT = Path.cwd() if (Path.cwd() / "registry.yaml").exists() else Path(__file__)
 
 @dataclass
 class AlertConfig:
-    channels: list[str] = field(default_factory=list)  # email, sms, discord, slack, console
+    channels: list[str] = field(default_factory=list)  # email, discord, slack, console
     batch_threshold: int = 3  # more than this many alerts at once -> one digest message
     min_score: float = 0.0  # alert only on passing postings at or above this score
-    sms_max_items: int = 5  # SMS digests list at most this many titles
-    sms_quiet_hours: tuple[int, int] | None = None  # e.g. (23, 7) local time; held, not dropped
-    timezone: str = "America/Los_Angeles"
     email_to: list[str] = field(default_factory=list)
-    sms_to: list[str] = field(default_factory=list)  # E.164 numbers, e.g. +14155550123
     public_url: str | None = None  # web app URL, linked from digests
 
 
@@ -54,19 +50,15 @@ def load_settings(path: str | Path | None = None) -> Settings:
     raw = yaml.safe_load(path.read_text()) if path.exists() else {}
     raw = raw or {}
     a = dict(raw.get("alerts") or {})
-    if a.get("sms_quiet_hours"):
-        a["sms_quiet_hours"] = tuple(a["sms_quiet_hours"])
     # Recipients may also come from env so the public repo doesn't hold personal contact info.
     if os.environ.get("RADAR_EMAIL_TO"):
         a["email_to"] = [x.strip() for x in os.environ["RADAR_EMAIL_TO"].split(",")]
-    if os.environ.get("RADAR_SMS_TO"):
-        a["sms_to"] = [x.strip() for x in os.environ["RADAR_SMS_TO"].split(",")]
     if os.environ.get("RADAR_PUBLIC_URL"):
         a["public_url"] = os.environ["RADAR_PUBLIC_URL"]
     if os.environ.get("RADAR_ALERT_CHANNELS"):
         a["channels"] = [x.strip() for x in os.environ["RADAR_ALERT_CHANNELS"].split(",") if x.strip()]
     return Settings(
-        filters=FilterConfig.from_dict(raw.get("filters")),
+        filters=FilterConfig.from_dict(raw.get("filters"), raw.get("profile")),
         alerts=AlertConfig(**a),
         poll=PollConfig(**(raw.get("poll") or {})),
         db_path=Path(os.environ.get("RADAR_DB", raw.get("db_path") or ROOT / "data" / "radar.db")),

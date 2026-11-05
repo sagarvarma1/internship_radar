@@ -24,7 +24,7 @@ US_COUNTRY = {"US", "USA", "United States", "United States of America"}
 def board_url(company: Company) -> str:
     match company.ats:
         case ATS.ASHBY:
-            return f"https://api.ashbyhq.com/posting-api/job-board/{company.slug}"
+            return f"https://api.ashbyhq.com/posting-api/job-board/{company.slug}?includeCompensation=true"
         case ATS.GREENHOUSE:
             return f"https://boards-api.greenhouse.io/v1/boards/{company.slug}/jobs?content=true"
         case ATS.LEVER:
@@ -112,6 +112,10 @@ def _dedupe(items: list[str]) -> list[str]:
 # ---------------------------------------------------------------- Ashby
 
 
+def _with_comp(description: str, summary: str | None) -> str:
+    return f"{description}\n\nCompensation: {summary}" if summary else description
+
+
 def parse_ashby(company: Company, data: dict) -> list[Posting]:
     out = []
     for j in data.get("jobs", []):
@@ -147,7 +151,10 @@ def parse_ashby(company: Company, data: dict) -> list[Posting]:
                 remote=remote,
                 employment_type=j.get("employmentType"),
                 posted_at=_dt(j.get("publishedAt")),
-                description=j.get("descriptionPlain") or html_to_text(j.get("descriptionHtml")),
+                description=_with_comp(
+                    j.get("descriptionPlain") or html_to_text(j.get("descriptionHtml")),
+                    (j.get("compensation") or {}).get("compensationTierSummary"),
+                ),
             )
         )
     return out

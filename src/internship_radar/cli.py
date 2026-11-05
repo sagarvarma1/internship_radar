@@ -178,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     s.set_defaults(fn=cmd_rescore)
 
     s = sub.add_parser("test-alert", help="send the top real match to one channel as a test")
-    s.add_argument("channel", choices=["email", "sms", "discord", "slack", "console"])
+    s.add_argument("channel", choices=["email", "discord", "slack", "console"])
     s.set_defaults(fn=cmd_test_alert)
 
     s = sub.add_parser("serve", help="run the web app")

@@ -24,7 +24,8 @@ app = FastAPI(title="Internship Radar", docs_url=None, redoc_url=None)
 
 STATUSES = ("new", "interested", "applied", "skipped")
 SORTS = {"score": "p.score DESC, p.first_seen_at DESC", "new": "p.first_seen_at DESC, p.score DESC",
-         "company": "p.company COLLATE NOCASE, p.score DESC"}
+         "company": "p.company COLLATE NOCASE, p.score DESC",
+         "pay": "COALESCE(json_extract(p.requirements, '$.pay_hourly[1]'), -1) DESC, p.score DESC"}
 VISIT_GAP = timedelta(minutes=30)
 
 
@@ -50,6 +51,17 @@ def conn():
     return db.connect(settings.db_path)
 
 
+def term_options(c) -> list[str]:
+    """Terms present among open internships, e.g. summer-2027, soonest first."""
+    rows = c.execute(
+        """SELECT DISTINCT json_extract(t.value, '$[0]') s, json_extract(t.value, '$[1]') y
+           FROM postings p, json_each(p.requirements, '$.terms') t
+           WHERE p.closed_at IS NULL AND p.is_internship=1 AND json_extract(t.value, '$[0]') IS NOT NULL"""
+    ).fetchall()
+    order = {"winter": 0, "spring": 1, "summer": 2, "fall": 3}
+    return [f"{r['s']}-{r['y']}" for r in sorted(rows, key=lambda r: (r["y"], order.get(r["s"], 9)))]
+
+
 def tag_options() -> list[str]:
     return sorted({t for c in load_registry(settings.registry_path) for t in c.tags})
 
@@ -73,6 +85,18 @@ def query_postings(c, params: dict, since: str | None) -> list[dict]:
         args.append(params["status"])
     elif params.get("hide_skipped", "1") == "1":
         where.append("p.status!='skipped'")
+    if params.get("term"):
+        season, _, year = params["term"].partition("-")
+        where.append("""EXISTS (SELECT 1 FROM json_each(p.requirements, '$.terms') t
+                        WHERE (json_extract(t.value, '$[0]')=? OR json_extract(t.value, '$[0]') IS NULL)
+                          AND json_extract(t.value, '$[1]')=?)""")
+        args += [season, int(year) if year.isdigit() else 0]
+    if params.get("min_pay"):
+        try:
+            where.append("json_extract(p.requirements, '$.pay_hourly[1]')>=?")
+            args.append(float(params["min_pay"]))
+        except ValueError:
+            pass
     if params.get("loc"):
         where.append("p.locations LIKE ?")
         args.append(f"%{params['loc']}%")
@@ -86,7 +110,7 @@ def query_postings(c, params: dict, since: str | None) -> list[dict]:
     rows = c.execute(
         f"""SELECT p.uid, p.company, p.title, p.team, p.department, p.locations, p.remote,
                    p.employment_type, p.posted_at, p.first_seen_at, p.apply_url, p.score,
-                   p.reasons, p.role_types, p.status, p.passes, p.source, c.tags
+                   p.reasons, p.role_types, p.status, p.passes, p.source, p.chips, c.tags
             FROM postings p JOIN companies c ON c.key=p.company_key
             WHERE {' AND '.join(where)} ORDER BY {order} LIMIT 1000""",
         args,
@@ -98,6 +122,7 @@ def query_postings(c, params: dict, since: str | None) -> list[dict]:
         d["reasons"] = json.loads(d["reasons"])
         d["role_types"] = json.loads(d["role_types"])
         d["tags"] = json.loads(d["tags"])
+        d["chips"] = json.loads(d["chips"])
         d["is_new"] = bool(since and d["first_seen_at"] > since)
         out.append(d)
     return out
@@ -132,6 +157,7 @@ def index(request: Request):
     c = conn()
     try:
         rows = query_postings(c, params, prev)
+        terms = term_options(c)
         totals = c.execute(
             """SELECT COUNT(*) n, COALESCE(SUM(passes),0) m FROM postings
                WHERE closed_at IS NULL AND is_internship=1"""
@@ -147,7 +173,7 @@ def index(request: Request):
     resp = templates.TemplateResponse(
         request, "index.html",
         {
-            "rows": rows, "params": params, "since": prev, "tags": tag_options(),
+            "rows": rows, "params": params, "since": prev, "tags": tag_options(), "terms": terms,
             "roles": ["swe", "ml", "research", "applied_science", "data", "hardware", "other"],
             "statuses": STATUSES, "total": totals["n"], "matching": totals["m"],
             "new_count": sum(r["is_new"] for r in rows),

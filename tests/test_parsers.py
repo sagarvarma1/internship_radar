@@ -18,7 +18,7 @@ def load(name):
 
 def test_board_urls():
     assert board_url(Company("Ramp", ATS.ASHBY, "ramp")) == \
-        "https://api.ashbyhq.com/posting-api/job-board/ramp"
+        "https://api.ashbyhq.com/posting-api/job-board/ramp?includeCompensation=true"
     assert board_url(Company("Figma", ATS.GREENHOUSE, "figma")) == \
         "https://boards-api.greenhouse.io/v1/boards/figma/jobs?content=true"
     assert board_url(Company("Palantir", ATS.LEVER, "palantir")) == \

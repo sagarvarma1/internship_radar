@@ -3,26 +3,26 @@
 Companies in registry: 233 (192 tracked, 41 unsupported)
 Tracked per ATS: ashby 94, greenhouse 90, lever 8
 Open postings tracked: 29241
-Open internships: 993 at 75 companies
-Internships matching your filters: 281
+Open internships: 931 at 75 companies
+Internships matching your filters: 330
 Last poll: 2026-11-05T18:04:02+00:00 (192 ok, 0 failed)
 
 ## Most internships
 - Astranis: 90 (19 match)
-- Shield AI: 87 (3 match)
 - Rocket Lab: 80 (8 match)
 - Zipline: 67 (9 match)
-- Waymo: 61 (26 match)
+- Waymo: 61 (45 match)
 - Palantir: 48 (29 match)
 - Jane Street: 41 (12 match)
 - Anduril: 40 (12 match)
-- Jump Trading: 28 (8 match)
-- Coinbase: 27 (5 match)
+- Jump Trading: 28 (9 match)
+- Coinbase: 27 (6 match)
 - Varda: 26 (4 match)
-- Skydio: 24 (10 match)
-- IMC Trading: 20 (8 match)
-- Lyft: 19 (1 match)
-- Stripe: 18 (3 match)
+- Shield AI: 26 (3 match)
+- Skydio: 24 (12 match)
+- IMC Trading: 20 (10 match)
+- Lyft: 19 (3 match)
+- Stripe: 18 (5 match)
 
 ## Broken boards
 - none

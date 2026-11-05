@@ -7,9 +7,8 @@ from pathlib import Path
 import pytest
 
 from internship_radar.ats import parse
-from internship_radar.filters import (
-    FilterConfig, classify_roles, detect_internship, evaluate, grad_years_stated,
-)
+from internship_radar.filters import FilterConfig, classify_roles, detect_internship, evaluate
+from internship_radar.requirements import Profile
 from internship_radar.models import ATS, Company, Posting, Remote
 
 FIX = Path(__file__).parent / "fixtures"
@@ -56,6 +55,7 @@ def test_internship_titles(title):
     # new-grad / full-time roles with a season in the title
     "Sales Development Representative - Summer 2027 Graduates",
     "Campus Full Time 2027 - Quantitative Trader",
+    "Software Engineer I, Entry-Level (Graduation Fall 2026 – Summer 2027)",
     "Senior Software Engineer",
     "Co-operative Partnerships Manager",
 ])
@@ -69,6 +69,8 @@ def test_employment_type_detection():
     assert detect_internship(P("Analyst", employment="Summer Internship"))[0]
     assert not detect_internship(P("Software Engineer", employment="FullTime"))[0]
     assert not detect_internship(P("Software Engineer", employment="Full-time"))[0]
+    # a board that labels a senior role "Intern" (seen live on Shield AI)
+    assert not detect_internship(P("Senior Staff Engineer, Autonomy (R5837)", employment="Intern"))[0]
 
 
 def test_description_alone_is_not_enough():
@@ -149,31 +151,53 @@ def test_role_filter():
     assert evaluate(P("Marketing Intern"), FilterConfig(role_types=[])).passes
 
 
-def test_graduation_years():
+def prof(**kw):
+    return FilterConfig(profile=Profile(**kw))
+
+
+def test_graduation_window_against_profile():
     desc = "Candidates must be graduating between December 2027 and June 2028."
-    assert grad_years_stated(desc) == [2027, 2028]
-    assert evaluate(P("SWE Intern", desc=desc), FilterConfig(graduation_years=[2028])).passes
-    m = evaluate(P("SWE Intern", desc=desc), FilterConfig(graduation_years=[2026]))
-    assert not m.passes and any("graduation" in r for r in m.reasons)
-    # no stated year -> not filtered
-    assert evaluate(P("SWE Intern"), FilterConfig(graduation_years=[2026])).passes
+    assert evaluate(P("SWE Intern", desc=desc), prof(graduation="2028-05")).passes
+    m = evaluate(P("SWE Intern", desc=desc), prof(graduation="2026-12"))
+    assert not m.passes and any("graduation Dec 2027–Jun 2028" in r for r in m.reasons)
+    # no stated window -> not filtered
+    assert evaluate(P("SWE Intern"), prof(graduation="2026-12")).passes
 
 
 @pytest.mark.parametrize("title,passes", [
     ("2027 Summer Intern, BS/MS/PhD, ML Performance", True),
-    ("2027 Summer Intern, MS/PhD, Machine Learning Engineer", True),  # ms allowed
+    ("2027 Summer Intern, MS/PhD, Machine Learning Engineer", False),  # bs student
     ("PhD Research Intern", False),
     ("2027 Summer Intern, MBA, Strategic Finance Engineer", False),
     ("Software Engineer Intern (BS/MS)", True),
 ])
-def test_degree_levels(title, passes):
-    assert evaluate(P(title), FilterConfig()).passes is passes
+def test_degree_in_title(title, passes):
+    assert evaluate(P(title), prof(degree_level="bs")).passes is passes
 
 
-def test_phd_only_description():
-    desc = "You must be currently enrolled in a PhD program in Computer Science."
-    assert not evaluate(P("Research Intern", desc=desc), FilterConfig()).passes
-    assert evaluate(P("Research Intern", desc=desc), FilterConfig(degree_levels=["phd"])).passes
+def test_degree_from_description_and_title_precedence():
+    desc = "Enrolled in a graduate program (Master's or PhD) in Computer Science."
+    assert not evaluate(P("Research Intern", desc=desc), prof(degree_level="bs")).passes
+    assert evaluate(P("Research Intern", desc=desc), prof(degree_level="ms")).passes
+    # title says BS/MS -> overrides the description
+    assert evaluate(P("Research Intern (BS/MS)", desc=desc), prof(degree_level="bs")).passes
+
+
+def test_requirements_unset_profile_never_filters():
+    desc = ("Must be a U.S. citizen. Minimum GPA of 3.5. Graduating by June 2026. "
+            "Enrolled in a PhD program.")
+    m = evaluate(P("SWE Intern", desc=desc), FilterConfig())
+    assert m.passes and m.chips  # requirements still extracted and shown
+
+
+def test_requirement_bonus_and_warnings():
+    desc = "Currently pursuing a B.S. in Computer Science\nGPA of 3.0 or above\nGraduating in 2028"
+    m = evaluate(P("SWE Intern", desc=desc),
+                 prof(graduation="2028-05", degree_level="bs", majors=["computer science"], gpa=3.6))
+    assert m.passes and any(r.startswith("meets 4 stated requirements") for r in m.reasons)
+    desc = "GPA of 3.5 or above preferred"
+    m = evaluate(P("SWE Intern", desc=desc), prof(gpa=3.2))
+    assert m.passes and any(r.startswith("⚠ GPA") for r in m.reasons)
 
 
 def test_config_rejects_unknown_keys():

@@ -16,6 +16,11 @@
 .why summary::-webkit-details-marker { display: none; }
 .why ul { margin: 4px 0 0; padding-left: 18px; }
 .why li.fail { color: var(--bad); }
+.why li.ok { color: var(--good); }
+.why li.warn { color: var(--warn); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.chip { font-size: 11.5px; padding: 1px 7px; border-radius: 4px; background: var(--bg);
+  border: 1px solid var(--line); color: var(--text); white-space: nowrap; }
 .score { font-weight: 650; font-variant-numeric: tabular-nums; font-size: 15px; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
 .seg button { font: inherit; font-size: 12px; border: 0; background: var(--panel); color: var(--muted);
@@ -48,8 +53,10 @@ tr.isnew td:first-child { box-shadow: inset 3px 0 0 var(--new); }
   <select name="tag"><option value="">All companies</option>{% for t in tags %}<option {% if params.tag == t %}selected{% endif %}>{{ t }}</option>{% endfor %}</select>
   <select name="role"><option value="">Any role</option>{% for r in roles %}<option {% if params.role == r %}selected{% endif %}>{{ r }}</option>{% endfor %}</select>
   <select name="remote"><option value="">Any workplace</option>{% for r in ["onsite", "hybrid", "remote", "unknown"] %}<option {% if params.remote == r %}selected{% endif %}>{{ r }}</option>{% endfor %}</select>
+  <select name="term"><option value="">Any term</option>{% for t in terms %}<option value="{{ t }}" {% if params.term == t %}selected{% endif %}>{{ t.replace("-", " ")|title }}</option>{% endfor %}</select>
+  <input type="search" name="min_pay" inputmode="decimal" placeholder="Min $/hr" value="{{ params.min_pay or '' }}" style="width:90px">
   <select name="status"><option value="">Any status</option>{% for s in statuses %}<option {% if params.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
-  <select name="sort">{% for k, v in [("score", "Best match"), ("new", "Newest first"), ("company", "Company")] %}<option value="{{ k }}" {% if params.sort == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+  <select name="sort">{% for k, v in [("score", "Best match"), ("new", "Newest first"), ("pay", "Highest pay"), ("company", "Company")] %}<option value="{{ k }}" {% if params.sort == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
   <label><input type="checkbox" name="new" value="1" {% if params.new == "1" %}checked{% endif %}> New only</label>
   <label><input type="checkbox" name="all" value="1" {% if params.all == "1" %}checked{% endif %}> Include non-matching</label>
   <button type="submit" style="display:none"></button>
@@ -66,7 +73,8 @@ tr.isnew td:first-child { box-shadow: inset 3px 0 0 var(--new); }
     <div><span class="co">{{ r.company }}</span>{% if r.is_new %} <span class="pill new">new</span>{% endif %}{% if not r.passes %} <span class="pill mute">filtered</span>{% endif %}</div>
     <div class="title"><a href="{{ r.apply_url }}" target="_blank" rel="noopener">{{ r.title }}</a></div>
     <div class="small muted">{% for role in r.role_types %}{{ role }}{% if not loop.last %}, {% endif %}{% endfor %}{% if r.team or r.department %} · {{ r.team or r.department }}{% endif %}</div>
-    <details class="why"><summary>Why it matched ▾</summary><ul>{% for why in r.reasons %}<li class="{% if why.startswith('filtered:') %}fail{% endif %}">{{ why }}</li>{% endfor %}</ul></details>
+    {% if r.chips %}<div class="chips">{% for c in r.chips %}<span class="chip">{{ c }}</span>{% endfor %}</div>{% endif %}
+    <details class="why"><summary>Why it matched ▾</summary><ul>{% for why in r.reasons %}<li class="{% if why.startswith('filtered:') %}fail{% elif why.startswith('✓') %}ok{% elif why.startswith('⚠') %}warn{% endif %}">{{ why }}</li>{% endfor %}</ul></details>
   </td>
   <td class="small">{{ r.locations[:3]|join("; ") or "Not listed" }}{% if r.locations|length > 3 %} <span class="muted">+{{ r.locations|length - 3 }}</span>{% endif %}
     {% if r.remote != "unknown" %}<div><span class="pill {% if r.remote == 'remote' %}warn{% else %}good{% endif %}">{{ r.remote }}</span></div>{% endif %}</td>

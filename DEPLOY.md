@@ -28,8 +28,8 @@ written against them. This is the behaviour it assumes, so the Orbit side can be
 Steps once those land:
 
 1. Create the project from this repo in the Orbit dashboard (GitHub App).
-2. Set secrets: `RADAR_PASSWORD`, `RADAR_ALERT_CHANNELS=email,sms`, `RADAR_EMAIL_TO`,
-   `RADAR_SMS_TO`, `RADAR_PUBLIC_URL`, plus the channel credentials from the README.
+2. Set secrets: `RADAR_PASSWORD`, `RADAR_EMAIL_TO`, `RADAR_PUBLIC_URL`, and the SMTP (or
+   Resend) variables from the README.
 3. Push to the production branch. The first cron run baselines every board without alerting.
 4. Check `/health` and `/healthz` (`poll_stale` should be `false` within ~10 minutes).
 

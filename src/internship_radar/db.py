@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS postings (
     score REAL NOT NULL DEFAULT 0,
     reasons TEXT NOT NULL DEFAULT '[]',
     role_types TEXT NOT NULL DEFAULT '[]',
+    requirements TEXT NOT NULL DEFAULT '{}',  -- extracted eligibility requirements
+    chips TEXT NOT NULL DEFAULT '[]',         -- short requirement labels
     status TEXT NOT NULL DEFAULT 'new',   -- new | interested | applied | skipped
     alert_pending INTEGER NOT NULL DEFAULT 0
 );
@@ -93,7 +95,15 @@ def connect(path: str | Path) -> sqlite3.Connection:
     conn.execute("PRAGMA busy_timeout=30000")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(SCHEMA)
+    _migrate(conn)
     return conn
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(postings)")}
+    for name, ddl in (("requirements", "TEXT NOT NULL DEFAULT '{}'"), ("chips", "TEXT NOT NULL DEFAULT '[]'")):
+        if name not in cols:
+            conn.execute(f"ALTER TABLE postings ADD COLUMN {name} {ddl}")
 
 
 # ---------------------------------------------------------------- companies
@@ -172,7 +182,7 @@ def apply_snapshot(
                 str(p.remote), p.employment_type,
                 p.posted_at.isoformat() if p.posted_at else None, p.apply_url, p.description,
                 int(m.is_internship), int(m.passes), m.score, json.dumps(m.reasons),
-                json.dumps(m.role_types),
+                json.dumps(m.role_types), json.dumps(m.requirements), json.dumps(m.chips),
             )
             if row is None:
                 new += 1
@@ -181,9 +191,9 @@ def apply_snapshot(
                 conn.execute(
                     """INSERT INTO postings (title, team, department, locations, countries, remote,
                          employment_type, posted_at, apply_url, description, is_internship, passes,
-                         score, reasons, role_types, uid, company_key, source, source_id, company,
-                         first_seen_at, last_seen_at, alert_pending)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                         score, reasons, role_types, requirements, chips, uid, company_key, source,
+                         source_id, company, first_seen_at, last_seen_at, alert_pending)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (*values, p.uid, company_key, str(p.source), p.source_id, p.company, t, t,
                      pending),
                 )
@@ -194,7 +204,7 @@ def apply_snapshot(
                     """UPDATE postings SET title=?, team=?, department=?, locations=?, countries=?,
                          remote=?, employment_type=?, posted_at=?, apply_url=?, description=?,
                          is_internship=?, passes=?, score=?, reasons=?, role_types=?,
-                         last_seen_at=?, closed_at=NULL
+                         requirements=?, chips=?, last_seen_at=?, closed_at=NULL
                        WHERE uid=?""",
                     (*values, t, p.uid),
                 )
@@ -233,10 +243,10 @@ def rescore_all(conn: sqlite3.Connection, scorer) -> int:
     for r in rows:
         m = scorer(row_to_posting(r))
         conn.execute(
-            """UPDATE postings SET is_internship=?, passes=?, score=?, reasons=?, role_types=?
-               WHERE uid=?""",
+            """UPDATE postings SET is_internship=?, passes=?, score=?, reasons=?, role_types=?,
+                 requirements=?, chips=? WHERE uid=?""",
             (int(m.is_internship), int(m.passes), m.score, json.dumps(m.reasons),
-             json.dumps(m.role_types), r["uid"]),
+             json.dumps(m.role_types), json.dumps(m.requirements), json.dumps(m.chips), r["uid"]),
         )
     conn.execute(
         """UPDATE companies SET open_internships=(SELECT COUNT(*) FROM postings p

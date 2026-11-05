@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from .models import Match, Posting, Remote
+from .requirements import Profile, check, extract
 
 # ---------------------------------------------------------------- config
 
@@ -20,10 +21,8 @@ class FilterConfig:
     allow_remote: bool = True
     allow_unknown_location: bool = True
     preferred_cities: list[str] = field(default_factory=list)
-    # Your graduation year(s). Postings that state a window excluding all of these fail.
-    graduation_years: list[int] = field(default_factory=list)
-    # Your degree level(s). Postings that only accept other levels (e.g. "MS/PhD", "MBA") fail.
-    degree_levels: list[str] = field(default_factory=lambda: ["bs", "ms"])
+    # Your eligibility (graduation, degree, GPA, work authorization, ...): see requirements.Profile.
+    profile: Profile = field(default_factory=Profile)
     preferred_tags: list[str] = field(default_factory=list)
     min_score: float = 0.0
     role_weights: dict[str, float] = field(
@@ -33,8 +32,9 @@ class FilterConfig:
     )
 
     @classmethod
-    def from_dict(cls, d: dict | None) -> FilterConfig:
+    def from_dict(cls, d: dict | None, profile: dict | None = None) -> FilterConfig:
         d = dict(d or {})
+        d["profile"] = Profile.from_dict(profile)
         weights = {**cls().role_weights, **(d.pop("role_weights", None) or {})}
         known = {k: v for k, v in d.items() if k in cls.__dataclass_fields__}
         unknown = set(d) - set(known)
@@ -71,8 +71,11 @@ DESC_STRONG = re.compile(
     r"intern(ship)? start dates?)",
     re.I,
 )
+SENIOR_TITLE = re.compile(r"\b(senior|sr\.?|staff|principal|lead|manager|director|head of|vp|"
+                          r"vice president|architect)\b", re.I)
 FULL_TIME_TITLE = re.compile(
-    r"\b(new grad\w*|graduates?|university grad\w*|early career|full[- ]time|campus full|"
+    r"\b(new grad\w*|graduates?|graduation|entry[- ]level|engineer i|university grad\w*|early career|"
+    r"full[- ]time|campus full|"
     r"rotational|associate program|analyst program)\b", re.I)
 
 
@@ -88,6 +91,9 @@ def detect_internship(p: Posting) -> tuple[bool, list[str]]:
         return True, reasons
 
     if p.employment_type and INTERN_EMPLOYMENT.search(p.employment_type):
+        # Some boards mislabel experienced roles ("Senior Staff Engineer" with type "Intern").
+        if SENIOR_TITLE.search(title):
+            return False, [f"employment type says '{p.employment_type}' but title is senior ('{title}')"]
         return True, [f"employment type is '{p.employment_type}'"]
 
     # "FPGA Associate (Summer 2027)": a season + year in the title, with no sign it's a
@@ -192,14 +198,8 @@ def location_verdict(p: Posting, cfg: FilterConfig) -> tuple[bool | None, str]:
     return None, "location unclear"
 
 
-# ---------------------------------------------------------------- grad year / degree
+# ---------------------------------------------------------------- degree in title
 
-GRAD_WINDOW = re.compile(r"(graduat\w*|class of|degree completion|completing (your|a) degree)", re.I)
-YEAR = re.compile(r"\b(20[2-3]\d)\b")
-PHD_ONLY = re.compile(
-    r"\b(currently (enrolled|pursuing) (in )?an? ph\.?d|must be (enrolled in|pursuing) a ph\.?d|"
-    r"ph\.?d\.? (students?|candidates?) only|enrolled in a ph\.?d\.? program)", re.I)
-INCLUSIVE_DEGREE = re.compile(r"\b(bachelor'?s|b\.?s\.?|undergraduate|master'?s|m\.?s\.?)\b", re.I)
 DEGREE_TOKENS = {
     "bs": re.compile(r"\b(b\.?s\.?|b\.?a\.?|bachelor'?s?|undergrad(uate)?s?)\b", re.I),
     "ms": re.compile(r"\b(m\.?s\.?|master'?s?|meng|graduate)\b", re.I),
@@ -208,34 +208,19 @@ DEGREE_TOKENS = {
 }
 
 
-def degrees_stated(p: Posting) -> tuple[set[str], str]:
-    """Degree levels a posting is restricted to, from the title (e.g. "BS/MS/PhD") or a
-    PhD-only phrase in the description. Empty set = not restricted / not stated."""
-    # Only look at a title segment that looks like a degree list, e.g. ", MS/PhD," or "(PhD)".
-    for seg in re.split(r"[,()\-–|]", p.title):
+def degrees_in_title(title: str) -> tuple[list[str], str]:
+    """Degree levels a title restricts to, e.g. "2027 Summer Intern, MS/PhD, ..." or "PhD Research
+    Intern". Empty = the title doesn't say."""
+    for seg in re.split(r"[,()\-–|]", title):
         found = {lvl for lvl, pat in DEGREE_TOKENS.items() if pat.search(seg)}
         words = re.sub(r"[\s/&+]|and|or", "", seg, flags=re.I)
-        # segment made only of degree tokens -> it's an explicit degree list
+        # segment made only of degree tokens -> an explicit degree list
         if found and len(re.sub(r"(?i)b\.?s\.?|b\.?a\.?|m\.?s\.?|ph\.?d\.?|mba|bachelors?|masters?|undergrad(uate)?|meng", "", words)) <= 2:
-            return found, f"title says {seg.strip()}"
-    # "PhD Research Intern": a PhD/MBA token anywhere, with no BS/MS mentioned, restricts it.
-    whole = {lvl for lvl, pat in DEGREE_TOKENS.items() if pat.search(p.title)}
+            return sorted(found), f"title says {seg.strip()}"
+    whole = {lvl for lvl, pat in DEGREE_TOKENS.items() if pat.search(title)}
     if whole and whole <= {"phd", "mba"}:
-        return whole, f"title says {'/'.join(sorted(whole)).upper()}"
-    m = PHD_ONLY.search(p.description or "")
-    if m:
-        around = p.description[max(0, m.start() - 150): m.end() + 150]
-        if not INCLUSIVE_DEGREE.search(around):
-            return {"phd"}, f"description says '{m.group(0)}'"
-    return set(), ""
-
-
-def grad_years_stated(text: str) -> list[int]:
-    years: set[int] = set()
-    for m in GRAD_WINDOW.finditer(text or ""):
-        window = text[m.start(): m.end() + 120]
-        years.update(int(y) for y in YEAR.findall(window))
-    return sorted(years)
+        return sorted(whole), f"title says {'/'.join(sorted(whole)).upper()}"
+    return [], ""
 
 
 # ---------------------------------------------------------------- scoring
@@ -293,32 +278,26 @@ def evaluate(p: Posting, cfg: FilterConfig, company_tags: tuple[str, ...] = (),
         score += 5
         reasons.append(f"preferred city {cities[0]} (+5)")
 
-    desc = p.description or ""
-    if cfg.graduation_years:
-        stated = grad_years_stated(desc)
-        if stated:
-            lo, hi = min(stated), max(stated)
-            mine = [y for y in cfg.graduation_years if lo <= y <= hi]
-            if mine:
-                score += 5
-                reasons.append(f"grad year {mine[0]} fits stated {lo}" + (f"–{hi}" if hi != lo else "") + " (+5)")
-            else:
-                passes = False
-                fails.append(f"stated graduation years {lo}–{hi} exclude {cfg.graduation_years}")
+    req = extract(p)
+    title_degrees, where = degrees_in_title(p.title)
+    if title_degrees:  # the title is more specific than boilerplate in the description
+        req.degrees, req.degree_text = title_degrees, where
+    confirmed = 0
+    for c in check(req, cfg.profile, now):
+        if c.status == "ok":
+            confirmed += 1
+            reasons.append(f"✓ {c.text}")
+        elif c.status == "warn":
+            score -= 5
+            reasons.append(f"⚠ {c.text} (-5)")
+        else:
+            passes = False
+            fails.append(c.text)
+    if confirmed:
+        bonus = min(10, 2 * confirmed)
+        score += bonus
+        reasons.append(f"meets {confirmed} stated requirement{'s' if confirmed > 1 else ''} (+{bonus})")
 
-    if cfg.degree_levels:
-        stated, where = degrees_stated(p)
-        if stated:
-            ok = stated & set(cfg.degree_levels)
-            if ok:
-                reasons.append(f"degree: {where}")
-            else:
-                passes = False
-                fails.append(f"degree {'/'.join(sorted(stated))} only ({where})")
-
-    term = TERM_TITLE.search(p.title)
-    if term:
-        reasons.append(f"term: {term.group(0)}")
 
     tags = [t for t in company_tags if t in cfg.preferred_tags]
     if tags:
@@ -333,4 +312,5 @@ def evaluate(p: Posting, cfg: FilterConfig, company_tags: tuple[str, ...] = (),
         passes = False
         fails.append(f"score {score:g} below min {cfg.min_score:g}")
 
-    return Match(True, score, reasons + [f"filtered: {f}" for f in fails], roles, passes)
+    return Match(True, score, reasons + [f"filtered: {f}" for f in fails], roles, passes,
+                 requirements=req.to_json(), chips=req.chips())

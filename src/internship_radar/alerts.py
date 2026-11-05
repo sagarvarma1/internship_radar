@@ -4,7 +4,6 @@ to each channel at most once, and a failed channel retries next run without re-s
 Channels and their env vars:
   email    SMTP_HOST, SMTP_PORT (587), SMTP_USER, SMTP_PASSWORD, EMAIL_FROM
            or RESEND_API_KEY + EMAIL_FROM
-  sms      TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM
   discord  DISCORD_WEBHOOK_URL
   slack    SLACK_WEBHOOK_URL
   console  (prints; for testing)
@@ -17,9 +16,8 @@ import json
 import os
 import smtplib
 import sqlite3
-from datetime import UTC, datetime
+from datetime import datetime
 from email.message import EmailMessage
-from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -49,6 +47,7 @@ def pending_alerts(conn: sqlite3.Connection, channel: str, min_score: float) -> 
             locations=json.loads(r["locations"]), remote=Remote(r["remote"]),
             apply_url=r["apply_url"], score=r["score"], reasons=json.loads(r["reasons"]),
             first_seen=datetime.fromisoformat(r["first_seen_at"]),
+            chips=json.loads(r["chips"]),
         )
         for r in rows
     ]
@@ -84,6 +83,7 @@ def format_text(alerts: list[Alert], public_url: str | None = None) -> tuple[str
         lines += [
             f"{a.company}: {a.title}",
             f"  Where: {_loc(a)}",
+            *([f"  Requirements: {' · '.join(a.chips)}"] if a.chips else []),
             f"  Score {a.score:g}. Why: {_why(a)}",
             f"  Apply: {a.apply_url}",
             "",
@@ -102,6 +102,7 @@ def format_html(alerts: list[Alert], public_url: str | None = None) -> str:
 <div style="font-size:16px;font-weight:600;margin:2px 0">
 <a href="{html.escape(a.apply_url)}" style="color:#1a56db;text-decoration:none">{html.escape(a.title)}</a></div>
 <div style="font-size:13px;color:#333">{html.escape(_loc(a))}</div>
+{f'<div style="font-size:12px;color:#333;margin-top:4px">{html.escape(" · ".join(a.chips))}</div>' if a.chips else ""}
 <div style="font-size:12px;color:#666;margin-top:4px">Why: {html.escape(_why(a))}</div>
 <div style="margin-top:8px"><a href="{html.escape(a.apply_url)}" style="font-size:13px">Apply →</a></div>
 </td></tr>"""
@@ -114,23 +115,6 @@ def format_html(alerts: list[Alert], public_url: str | None = None) -> str:
         '<div style="font-family:-apple-system,Segoe UI,sans-serif;max-width:600px">'
         f'<table style="width:100%;border-collapse:collapse">{"".join(items)}</table>{footer}</div>'
     )
-
-
-def format_sms(alerts: list[Alert], max_items: int, public_url: str | None = None) -> str:
-    if len(alerts) == 1:
-        a = alerts[0]
-        loc = a.locations[0] if a.locations else ""
-        return f"New internship: {a.company} - {a.title}" + (f" ({loc})" if loc else "") + f"\n{a.apply_url}"
-    lines = [f"{len(alerts)} new internships:"]
-    for a in alerts[:max_items]:
-        lines.append(f"- {a.company}: {a.title}")
-    if len(alerts) > max_items:
-        lines.append(f"+{len(alerts) - max_items} more")
-    if public_url:
-        lines.append(public_url)
-    else:
-        lines.append(f"Top: {alerts[0].apply_url}")
-    return "\n".join(lines)
 
 
 def batches(alerts: list[Alert], threshold: int) -> list[list[Alert]]:
@@ -181,32 +165,11 @@ def send_email(cfg: AlertConfig, subject: str, text: str, html_body: str) -> Non
             s.send_message(msg)
 
 
-def send_sms(cfg: AlertConfig, body: str) -> None:
-    if not cfg.sms_to:
-        raise ChannelError("no SMS recipients (alerts.sms_to or RADAR_SMS_TO)")
-    sid, token, sender = _env("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM")
-    for to in cfg.sms_to:
-        r = httpx.post(
-            f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json",
-            auth=(sid, token), data={"From": sender, "To": to, "Body": body}, timeout=20,
-        )
-        if r.status_code >= 300:
-            raise ChannelError(f"Twilio HTTP {r.status_code}: {r.text[:200]}")
-
-
 def send_webhook(url_env: str, payload: dict) -> None:
     (url,) = _env(url_env)
     r = httpx.post(url, json=payload, timeout=20)
     if r.status_code >= 300:
         raise ChannelError(f"webhook HTTP {r.status_code}: {r.text[:200]}")
-
-
-def in_quiet_hours(cfg: AlertConfig, at: datetime | None = None) -> bool:
-    if not cfg.sms_quiet_hours:
-        return False
-    start, end = cfg.sms_quiet_hours
-    hour = (at or datetime.now(UTC)).astimezone(ZoneInfo(cfg.timezone)).hour
-    return start <= hour or hour < end if start > end else start <= hour < end
 
 
 def deliver(conn: sqlite3.Connection, cfg: AlertConfig, channel: str, alerts: list[Alert]) -> None:
@@ -215,8 +178,6 @@ def deliver(conn: sqlite3.Connection, cfg: AlertConfig, channel: str, alerts: li
         match channel:
             case "email":
                 send_email(cfg, subject, text, format_html(batch, cfg.public_url))
-            case "sms":
-                send_sms(cfg, format_sms(batch, cfg.sms_max_items, cfg.public_url))
             case "discord":
                 # Discord caps content at 2000 chars.
                 send_webhook("DISCORD_WEBHOOK_URL", {"content": f"**{subject}**\n{text}"[:1990]})
@@ -240,9 +201,6 @@ def run_alerts(conn: sqlite3.Connection, cfg: AlertConfig) -> dict[str, str]:
         alerts = pending_alerts(conn, channel, cfg.min_score)
         if not alerts:
             status[channel] = "nothing pending"
-            continue
-        if channel == "sms" and in_quiet_hours(cfg):
-            status[channel] = f"quiet hours; holding {len(alerts)}"
             continue
         try:
             deliver(conn, cfg, channel, alerts)

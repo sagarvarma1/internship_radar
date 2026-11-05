@@ -72,6 +72,8 @@ class Match:
     reasons: list[str]  # human-readable, e.g. "title contains 'intern'"
     role_types: list[str]  # e.g. ["swe", "ml"]
     passes: bool  # internship AND passes every configured fit filter
+    requirements: dict = field(default_factory=dict)  # extracted eligibility requirements
+    chips: list[str] = field(default_factory=list)  # short requirement labels for UI/alerts
 
 
 @dataclass
@@ -85,3 +87,4 @@ class Alert:
     score: float
     reasons: list[str]
     first_seen: datetime
+    chips: list[str] = field(default_factory=list)

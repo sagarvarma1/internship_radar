@@ -127,16 +127,10 @@ def test_formats_include_required_fields():
     assert "filtered:" not in text
     html = alerts.format_html([A(1)])
     assert 'href="https://apply/1"' in html
-    sms = alerts.format_sms([A(1)], 5)
-    assert "Acme" in sms and "https://apply/1" in sms
-    digest = alerts.format_sms([A(i) for i in range(8)], 5, "https://radar.example")
-    assert digest.startswith("8 new internships") and "+3 more" in digest and "radar.example" in digest
+    a = A(2)
+    a.chips = ["Summer 2027", "grad by Jun 2028", "GPA ≥ 3"]
+    _, text = alerts.format_text([a])
+    assert "Requirements: Summer 2027 · grad by Jun 2028 · GPA ≥ 3" in text
+    assert "Summer 2027 · grad by Jun 2028" in alerts.format_html([a])
     subject, _ = alerts.format_text([A(i, f"Co{i}") for i in range(6)])
     assert subject.startswith("6 new internships: Co0, Co1, Co2, Co3…")
-
-
-def test_quiet_hours():
-    cfg = AlertConfig(sms_quiet_hours=(23, 7), timezone="UTC")
-    assert alerts.in_quiet_hours(cfg, datetime(2026, 1, 1, 23, 30, tzinfo=UTC))
-    assert alerts.in_quiet_hours(cfg, datetime(2026, 1, 1, 3, 0, tzinfo=UTC))
-    assert not alerts.in_quiet_hours(cfg, datetime(2026, 1, 1, 12, 0, tzinfo=UTC))
