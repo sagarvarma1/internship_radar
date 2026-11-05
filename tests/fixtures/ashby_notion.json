@@ -1,0 +1,158 @@
+{
+ "jobs": [
+  {
+   "id": "3fba1c39-c5cb-47d7-9ad2-1cec4d7e9d0c",
+   "title": "Software Engineer Intern (Summer 2027)",
+   "department": "Early Career",
+   "team": "Early Career",
+   "employmentType": "Intern",
+   "location": "San Francisco, California",
+   "secondaryLocations": [
+    {
+     "location": "New York, New York",
+     "address": {
+      "postalAddress": {
+       "addressRegion": "New York",
+       "addressCountry": "United States",
+       "addressLocality": "New York"
+      }
+     }
+    }
+   ],
+   "publishedAt": "2026-08-14T19:07:13.459+00:00",
+   "isListed": true,
+   "isRemote": true,
+   "workplaceType": "Hybrid",
+   "address": {
+    "postalAddress": {
+     "addressRegion": "California",
+     "addressCountry": "United States",
+     "addressLocality": "San Francisco"
+    }
+   },
+   "jobUrl": "https://jobs.ashbyhq.com/notion/3fba1c39-c5cb-47d7-9ad2-1cec4d7e9d0c",
+   "applyUrl": "https://jobs.ashbyhq.com/notion/3fba1c39-c5cb-47d7-9ad2-1cec4d7e9d0c/application",
+   "descriptionHtml": "<h1>Who We Are</h1><p style=\"min-height:1.5em\">Notion is the collaborative AI workspace where teams and agents <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"https://www.youtube.com/watch?v=vkpYpWfEK5s\">think together</a>. We're building one place where your knowledge, projects, meetings, and AI tools live side by side, so work is faster, clearer, and less fragmented. Millions of individuals, small teams, and large companies run their work on Notion.</p><p style=\"min-height:1.5em\"></p><p style=\"min-height:1.5em\">Notinos (our employees) are customer zero in bringing this future of work to life. We care about craft, building things that last, and the belief that great work is still fundamentally human. Our goal isn\u2019t to ship the next feature. Each and every team of Notinos is working to set the standard for how humans work together in the AI era. From building a business\u2019s system of record to making and managing AI agents to automating away the busy work, we care deeply about giving our customers more time for their life\u2019s work.</p><p style=\"min-height:1.5em\"></p><p style=\"min-height:1.5em\"><strong>This internship will take place from May 17 - August 6 or June 14 - Sept 3 (based on your summer schedule) and you will need to be able to work out of our NY or SF office during this time.</strong></p><p style=\"min-height:1.5em\"></p><h1>What You'll Achieve:</h1><ul style=\"min-height:1.5em\"><li><p style=\"min-height:1.5em\">Write clean, secure, tested, and documented code.<",
+   "descriptionPlain": "WHO WE ARE\n\nNotion is the collaborative AI workspace where teams and agents think together https://www.youtube.com/watch?v=vkpYpWfEK5s. We're building one place where your knowledge, projects, meetings, and AI tools live side by side, so work is faster, clearer, and less fragmented. Millions of individuals, small teams, and large companies run their work on Notion.\n\n\n\nNotinos (our employees) are customer zero in bringing this future of work to life. We care about craft, building things that last, and the belief that great work is still fundamentally human. Our goal isn\u2019t to ship the next feature. Each and every team of Notinos is working to set the standard for how humans work together in the AI era. From building a business\u2019s system of record to making and managing AI agents to automating away the busy work, we care deeply about giving our customers more time for their life\u2019s work.\n\n\n\nThis internship will take place from May 17 - August 6 or June 14 - Sept 3 (based on your summer schedule) and you will need to be able to work out of our NY or SF office during this time.\n\n\n\n\nWHAT YOU'LL ACHIEVE:\n\n - Write clean, secure, tested, and documented code.\n\n - Design & enhance the Notion product with new capabilities with an AI first mindset\n\n - Develop, fix and debug software for across our full stack: web services, databases, applications, tools while leveraging modern frameworks and tooling.\n\n\n\n\nQUALIFICATIONS:\n\n - Pursuing a bachelor's or master\u2019s degree in computer science, engi"
+  },
+  {
+   "id": "2b587e66-deac-421a-a824-9415ba78b5a7",
+   "title": "Software Engineer Intern, Mobile (Winter 2027)",
+   "department": "Early Career",
+   "team": "Early Career",
+   "employmentType": "Intern",
+   "location": "San Francisco, California",
+   "secondaryLocations": [
+    {
+     "location": "New York, New York",
+     "address": {
+      "postalAddress": {
+       "addressRegion": "New York",
+       "addressCountry": "United States",
+       "addressLocality": "New York"
+      }
+     }
+    }
+   ],
+   "publishedAt": "2026-09-24T19:58:11.492+00:00",
+   "isListed": true,
+   "isRemote": true,
+   "workplaceType": "Hybrid",
+   "address": {
+    "postalAddress": {
+     "addressRegion": "California",
+     "addressCountry": "United States",
+     "addressLocality": "San Francisco"
+    }
+   },
+   "jobUrl": "https://jobs.ashbyhq.com/notion/2b587e66-deac-421a-a824-9415ba78b5a7",
+   "applyUrl": "https://jobs.ashbyhq.com/notion/2b587e66-deac-421a-a824-9415ba78b5a7/application",
+   "descriptionHtml": "<h1>Who We Are</h1><p style=\"min-height:1.5em\">Notion is the collaborative AI workspace where teams and agents <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"https://www.youtube.com/watch?v=vkpYpWfEK5s\">think together</a>. We're building one place where your knowledge, projects, meetings, and AI tools live side by side, so work is faster, clearer, and less fragmented. Millions of individuals, small teams, and large companies run their work on Notion.</p><p style=\"min-height:1.5em\"></p><p style=\"min-height:1.5em\">Notinos (our employees) are customer zero in bringing this future of work to life. We care about craft, building things that last, and the belief that great work is still fundamentally human. Our goal isn\u2019t to ship the next feature. Each and every team of Notinos is working to set the standard for how humans work together in the AI era. From building a business\u2019s system of record to making and managing AI agents to automating away the busy work, we care deeply about giving our customers more time for their life\u2019s work.</p><p style=\"min-height:1.5em\"></p><p style=\"min-height:1.5em\">Notion is an in person company, and currently requires its employees to come to the office for three Anchor Days (Mondays, Tuesdays, and Thursdays). <em><strong>This internship will take place from Jan 25 - Apr 16 and you will need to be able to work out of our NY or SF office during this time.</strong></em></p><p style=\"min-height:1.5em\"></p><h1>About the Role:</h1><p style=\"mi",
+   "descriptionPlain": "WHO WE ARE\n\nNotion is the collaborative AI workspace where teams and agents think together https://www.youtube.com/watch?v=vkpYpWfEK5s. We're building one place where your knowledge, projects, meetings, and AI tools live side by side, so work is faster, clearer, and less fragmented. Millions of individuals, small teams, and large companies run their work on Notion.\n\n\n\nNotinos (our employees) are customer zero in bringing this future of work to life. We care about craft, building things that last, and the belief that great work is still fundamentally human. Our goal isn\u2019t to ship the next feature. Each and every team of Notinos is working to set the standard for how humans work together in the AI era. From building a business\u2019s system of record to making and managing AI agents to automating away the busy work, we care deeply about giving our customers more time for their life\u2019s work.\n\n\n\nNotion is an in person company, and currently requires its employees to come to the office for three Anchor Days (Mondays, Tuesdays, and Thursdays). This internship will take place from Jan 25 - Apr 16 and you will need to be able to work out of our NY or SF office during this time.\n\n\n\n\nABOUT THE ROLE:\n\nMobile devices have reshaped personal computing\u2014the power of a desktop now fits in our pockets. By giving everyone the building blocks to create their own tools, we'll solve more problems wherever we go. A delightful, intuitive mobile experience: that's our guiding light, and we need Android and"
+  },
+  {
+   "id": "1fc309c8-da20-4ff2-84c7-8b863ece2b0a",
+   "title": "Software Engineer, AI Connections (Developer Platform)",
+   "department": "Engineering",
+   "team": "Engineering",
+   "employmentType": "FullTime",
+   "location": "San Francisco, California",
+   "secondaryLocations": [
+    {
+     "location": "New York, New York",
+     "address": {
+      "postalAddress": {
+       "addressRegion": "New York",
+       "addressCountry": "United States",
+       "addressLocality": "New York"
+      }
+     }
+    }
+   ],
+   "publishedAt": "2026-08-24T14:44:49.699+00:00",
+   "isListed": true,
+   "isRemote": true,
+   "workplaceType": "Hybrid",
+   "address": {
+    "postalAddress": {
+     "addressRegion": "California",
+     "addressCountry": "United States",
+     "addressLocality": "San Francisco"
+    }
+   },
+   "jobUrl": "https://jobs.ashbyhq.com/notion/1fc309c8-da20-4ff2-84c7-8b863ece2b0a",
+   "applyUrl": "https://jobs.ashbyhq.com/notion/1fc309c8-da20-4ff2-84c7-8b863ece2b0a/application",
+   "descriptionHtml": "<h1>Who We Are</h1><p style=\"min-height:1.5em\">Notion is the collaborative AI workspace where teams and agents <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"https://www.youtube.com/watch?v=vkpYpWfEK5s\">think together</a>. We're building one place where your knowledge, projects, meetings, and AI tools live side by side, so work is faster, clearer, and less fragmented. Millions of individuals, small teams, and large companies run their work on Notion.</p><p style=\"min-height:1.5em\"></p><p style=\"min-height:1.5em\">Notinos (our employees) are customer zero in bringing this future of work to life. We care about craft, building things that last, and the belief that great work is still fundamentally human. Our goal isn\u2019t to ship the next feature. Each and every team of Notinos is working to set the standard for how humans work together in the AI era. From building a business\u2019s system of record to making and managing AI agents to automating away the busy work, we care deeply about giving our customers more time for their life\u2019s work.</p><p style=\"min-height:1.5em\"></p><h1>About the Role:</h1><p style=\"min-height:1.5em\">As a <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"https://www.notion.com/product/dev\">Developer Platform</a> engineer, you will directly contribute to the foundational pieces that make Notion extensible and connected. You will build tools, APIs, and platform experiences that help customers connect Notion to the world \u2014 bringing their apps, ",
+   "descriptionPlain": "WHO WE ARE\n\nNotion is the collaborative AI workspace where teams and agents think together https://www.youtube.com/watch?v=vkpYpWfEK5s. We're building one place where your knowledge, projects, meetings, and AI tools live side by side, so work is faster, clearer, and less fragmented. Millions of individuals, small teams, and large companies run their work on Notion.\n\n\n\nNotinos (our employees) are customer zero in bringing this future of work to life. We care about craft, building things that last, and the belief that great work is still fundamentally human. Our goal isn\u2019t to ship the next feature. Each and every team of Notinos is working to set the standard for how humans work together in the AI era. From building a business\u2019s system of record to making and managing AI agents to automating away the busy work, we care deeply about giving our customers more time for their life\u2019s work.\n\n\n\n\nABOUT THE ROLE:\n\nAs a Developer Platform https://www.notion.com/product/dev engineer, you will directly contribute to the foundational pieces that make Notion extensible and connected. You will build tools, APIs, and platform experiences that help customers connect Notion to the world \u2014 bringing their apps, data, and workflows into one workspace. Your work will make it easier for developers, admins, and builders to create reliable integrations and automations on top of Notion.\n\n\nYou will be a key player in building the robust technical foundation that allows Notion to achieve the connected wor"
+  },
+  {
+   "id": "05e14247-17c4-4e98-9a13-53828a4e2f13",
+   "title": "Business Development Representative, New York",
+   "department": "Early Career",
+   "team": "Early Career",
+   "employmentType": "FullTime",
+   "location": "New York, New York",
+   "secondaryLocations": [],
+   "publishedAt": "2026-04-02T21:00:55.755+00:00",
+   "isListed": true,
+   "isRemote": true,
+   "workplaceType": "Hybrid",
+   "address": {
+    "postalAddress": {
+     "addressRegion": "New York",
+     "addressCountry": "United States",
+     "addressLocality": "New York"
+    }
+   },
+   "jobUrl": "https://jobs.ashbyhq.com/notion/05e14247-17c4-4e98-9a13-53828a4e2f13",
+   "applyUrl": "https://jobs.ashbyhq.com/notion/05e14247-17c4-4e98-9a13-53828a4e2f13/application",
+   "descriptionHtml": "<h1>Who We Are</h1><p style=\"min-height:1.5em\">Notion is the collaborative AI workspace where teams and agents <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"https://www.youtube.com/watch?v=vkpYpWfEK5s\">think together</a>. We're building one place where your knowledge, projects, meetings, and AI tools live side by side, so work is faster, clearer, and less fragmented. Millions of individuals, small teams, and large companies run their work on Notion.</p><p style=\"min-height:1.5em\"></p><p style=\"min-height:1.5em\">Notinos (our employees) are customer zero in bringing this future of work to life. We care about craft, building things that last, and the belief that great work is still fundamentally human. Our goal isn\u2019t to ship the next feature. Each and every team of Notinos is working to set the standard for how humans work together in the AI era. From building a business\u2019s system of record to making and managing AI agents to automating away the busy work, we care deeply about giving our customers more time for their life\u2019s work.</p><p style=\"min-height:1.5em\"></p><h1>About The Role</h1><p style=\"min-height:1.5em\">Notion is rebuilding its go-to-market motion around a workflow-first, builder-led model\u2014and the BDR is at the front of it. As a Business Development Rep, you'll be the force that turns the right accounts into the right conversations. You'll partner closely with Solutions Consultants to identify and target companies that are ready to rethink how they work\u2014a",
+   "descriptionPlain": "WHO WE ARE\n\nNotion is the collaborative AI workspace where teams and agents think together https://www.youtube.com/watch?v=vkpYpWfEK5s. We're building one place where your knowledge, projects, meetings, and AI tools live side by side, so work is faster, clearer, and less fragmented. Millions of individuals, small teams, and large companies run their work on Notion.\n\n\n\nNotinos (our employees) are customer zero in bringing this future of work to life. We care about craft, building things that last, and the belief that great work is still fundamentally human. Our goal isn\u2019t to ship the next feature. Each and every team of Notinos is working to set the standard for how humans work together in the AI era. From building a business\u2019s system of record to making and managing AI agents to automating away the busy work, we care deeply about giving our customers more time for their life\u2019s work.\n\n\n\n\nABOUT THE ROLE\n\nNotion is rebuilding its go-to-market motion around a workflow-first, builder-led model\u2014and the BDR is at the front of it. As a Business Development Rep, you'll be the force that turns the right accounts into the right conversations. You'll partner closely with Solutions Consultants to identify and target companies that are ready to rethink how they work\u2014and your job is to get them in the room. This isn't generic pipeline work: you're qualifying for workflow-first, build-ready opportunities that set SCs up to win. If you're competitive, curious, and energized by outbound that a"
+  },
+  {
+   "id": "b21fef72-4864-4a3e-a627-91557a0f8a36",
+   "title": "Business Development Representative, San Francisco",
+   "department": "Early Career",
+   "team": "Early Career",
+   "employmentType": "FullTime",
+   "location": "San Francisco, California",
+   "secondaryLocations": [],
+   "publishedAt": "2026-04-01T23:05:05.541+00:00",
+   "isListed": true,
+   "isRemote": true,
+   "workplaceType": "Hybrid",
+   "address": {
+    "postalAddress": {
+     "addressRegion": "California",
+     "addressCountry": "United States",
+     "addressLocality": "San Francisco"
+    }
+   },
+   "jobUrl": "https://jobs.ashbyhq.com/notion/b21fef72-4864-4a3e-a627-91557a0f8a36",
+   "applyUrl": "https://jobs.ashbyhq.com/notion/b21fef72-4864-4a3e-a627-91557a0f8a36/application",
+   "descriptionHtml": "<h1>Who We Are</h1><p style=\"min-height:1.5em\">Notion is the collaborative AI workspace where teams and agents <a target=\"_blank\" rel=\"noopener noreferrer nofollow\" href=\"https://www.youtube.com/watch?v=vkpYpWfEK5s\">think together</a>. We're building one place where your knowledge, projects, meetings, and AI tools live side by side, so work is faster, clearer, and less fragmented. Millions of individuals, small teams, and large companies run their work on Notion.</p><p style=\"min-height:1.5em\"></p><p style=\"min-height:1.5em\">Notinos (our employees) are customer zero in bringing this future of work to life. We care about craft, building things that last, and the belief that great work is still fundamentally human. Our goal isn\u2019t to ship the next feature. Each and every team of Notinos is working to set the standard for how humans work together in the AI era. From building a business\u2019s system of record to making and managing AI agents to automating away the busy work, we care deeply about giving our customers more time for their life\u2019s work.</p><p style=\"min-height:1.5em\"></p><h1>About The Role</h1><p style=\"min-height:1.5em\">Notion is rebuilding its go-to-market motion around a workflow-first, builder-led model\u2014and the BDR is at the front of it. As a Business Development Rep, you'll be the force that turns the right accounts into the right conversations. You'll partner closely with Solutions Consultants to identify and target companies that are ready to rethink how they work\u2014a",
+   "descriptionPlain": "WHO WE ARE\n\nNotion is the collaborative AI workspace where teams and agents think together https://www.youtube.com/watch?v=vkpYpWfEK5s. We're building one place where your knowledge, projects, meetings, and AI tools live side by side, so work is faster, clearer, and less fragmented. Millions of individuals, small teams, and large companies run their work on Notion.\n\n\n\nNotinos (our employees) are customer zero in bringing this future of work to life. We care about craft, building things that last, and the belief that great work is still fundamentally human. Our goal isn\u2019t to ship the next feature. Each and every team of Notinos is working to set the standard for how humans work together in the AI era. From building a business\u2019s system of record to making and managing AI agents to automating away the busy work, we care deeply about giving our customers more time for their life\u2019s work.\n\n\n\n\nABOUT THE ROLE\n\nNotion is rebuilding its go-to-market motion around a workflow-first, builder-led model\u2014and the BDR is at the front of it. As a Business Development Rep, you'll be the force that turns the right accounts into the right conversations. You'll partner closely with Solutions Consultants to identify and target companies that are ready to rethink how they work\u2014and your job is to get them in the room. This isn't generic pipeline work: you're qualifying for workflow-first, build-ready opportunities that set SCs up to win. If you're competitive, curious, and energized by outbound that a"
+  }
+ ],
+ "apiVersion": "1"
+}

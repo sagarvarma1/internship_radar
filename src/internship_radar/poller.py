@@ -1,0 +1,135 @@
+"""Poll every registered board once (cron mode) or forever (worker mode)."""
+
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import random
+import sqlite3
+import time
+from datetime import UTC, datetime, timedelta
+
+from . import db
+from .alerts import run_alerts
+from .ats import board_url, parse
+from .config import Settings, load_registry
+from .fetch import Fetcher, HostLimiter
+from .filters import evaluate
+from .models import ATS, Company
+
+
+def _due(state: sqlite3.Row | None, settings: Settings, at: datetime) -> bool:
+    """Back off boards that keep failing: after 3 straight failures, wait
+    interval * 2^(failures-2), capped at max_backoff_hours."""
+    if state is None or state["consecutive_failures"] < 3 or not state["last_error_at"]:
+        return True
+    wait = min(
+        timedelta(minutes=settings.poll.interval_minutes) * 2 ** (state["consecutive_failures"] - 2),
+        timedelta(hours=settings.poll.max_backoff_hours),
+    )
+    return at - datetime.fromisoformat(state["last_error_at"]) >= wait
+
+
+def stagger_offset(key: str, window: float) -> float:
+    """Deterministic per-company offset within the polling window, so each board is hit at
+    roughly the same point in every cycle instead of all at once."""
+    h = int(hashlib.sha256(key.encode()).hexdigest()[:8], 16)
+    return (h / 0xFFFFFFFF) * window
+
+
+async def poll_company(
+    conn: sqlite3.Connection, fetcher: Fetcher, company: Company, settings: Settings
+) -> dict:
+    state = db.get_company_state(conn, company.key)
+    etag = state["etag"] if state and state["baselined"] else None
+    res = await fetcher.get_json(board_url(company), etag=etag)
+    if res.status == 304:
+        db.record_not_modified(conn, company.key)
+        return {"company": company.name, "status": "not modified"}
+    if not res.ok or res.data is None:
+        db.record_failure(conn, company.key, res.error or f"HTTP {res.status}")
+        return {"company": company.name, "status": "error", "error": res.error}
+    try:
+        postings = parse(company, res.data)
+    except Exception as e:
+        db.record_failure(conn, company.key, f"parse error: {type(e).__name__}: {e}")
+        return {"company": company.name, "status": "error", "error": str(e)}
+    scored = [(p, evaluate(p, settings.filters, company.tags)) for p in postings]
+    counts = db.apply_snapshot(conn, company.key, res.etag, scored)
+    return {"company": company.name, "status": "ok", **counts}
+
+
+async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str] | None = None,
+                   fetcher: Fetcher | None = None, send_alerts: bool = True) -> dict:
+    conn = db.connect(settings.db_path)
+    companies = load_registry(settings.registry_path)
+    db.sync_registry(conn, companies)
+    targets = [c for c in companies if c.ats is not ATS.UNSUPPORTED]
+    if only:
+        wanted = {o.lower() for o in only}
+        targets = [c for c in targets if c.name.lower() in wanted or (c.slug or "").lower() in wanted]
+    at = datetime.now(UTC)
+    targets = [c for c in targets if _due(db.get_company_state(conn, c.key), settings, at)]
+
+    run_id = conn.execute(
+        "INSERT INTO poll_runs (started_at, companies) VALUES (?, ?)", (db.now(), len(targets))
+    ).lastrowid
+
+    own_fetcher = fetcher is None
+    fetcher = fetcher or Fetcher(limiter=HostLimiter(settings.poll.per_host_interval_seconds))
+    sem = asyncio.Semaphore(settings.poll.concurrency)
+    start = time.monotonic()
+
+    async def one(c: Company) -> dict:
+        if spread_seconds:
+            delay = stagger_offset(c.key, spread_seconds) - (time.monotonic() - start)
+            if delay > 0:
+                await asyncio.sleep(delay)
+        async with sem:
+            try:
+                return await poll_company(conn, fetcher, c, settings)
+            except Exception as e:  # one bad board must never stop the cycle
+                db.record_failure(conn, c.key, f"{type(e).__name__}: {e}")
+                return {"company": c.name, "status": "error", "error": str(e)}
+
+    random.shuffle(targets)
+    try:
+        results = await asyncio.gather(*(one(c) for c in targets))
+    finally:
+        if own_fetcher:
+            await fetcher.aclose()
+
+    # Don't alert on stale backlog (e.g. alerts were misconfigured for days).
+    cutoff = (datetime.now(UTC) - timedelta(days=2)).isoformat(timespec="seconds")
+    conn.execute("UPDATE postings SET alert_pending=0 WHERE alert_pending=1 AND first_seen_at<?", (cutoff,))
+    alert_status = run_alerts(conn, settings.alerts) if send_alerts else {}
+
+    ok = sum(r["status"] != "error" for r in results)
+    summary = {
+        "companies": len(results),
+        "ok": ok,
+        "failed": len(results) - ok,
+        "new_postings": sum(r.get("new", 0) for r in results),
+        "new_matches": sum(r.get("new_matches", 0) for r in results),
+        "closed": sum(r.get("closed", 0) for r in results),
+        "seconds": round(time.monotonic() - start, 1),
+        "alerts": alert_status,
+        "errors": [f"{r['company']}: {r.get('error')}" for r in results if r["status"] == "error"],
+    }
+    conn.execute(
+        """UPDATE poll_runs SET finished_at=?, ok=?, failed=?, new_postings=?, new_matches=?
+           WHERE id=?""",
+        (db.now(), ok, summary["failed"], summary["new_postings"], summary["new_matches"], run_id),
+    )
+    conn.close()
+    return summary
+
+
+async def worker(settings: Settings) -> None:
+    """Long-running mode: one cycle every interval, each cycle spread over ~80% of the interval."""
+    interval = settings.poll.interval_minutes * 60
+    while True:
+        started = time.monotonic()
+        summary = await poll_all(settings, spread_seconds=interval * 0.8)
+        print(f"{datetime.now(UTC):%Y-%m-%d %H:%M:%S} {summary}", flush=True)
+        await asyncio.sleep(max(5.0, interval - (time.monotonic() - started)))

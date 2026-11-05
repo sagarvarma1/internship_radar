@@ -1,0 +1,1236 @@
+# Company registry. Every supported entry was validated against its live ATS API.
+# Add companies with:  radar discover <careers-url> --add --tags ai-lab
+companies:
+- name: 1Password
+  ats: ashby
+  slug: 1password
+  tags:
+  - security
+- name: 1X
+  ats: ashby
+  slug: 1x
+  tags:
+  - robotics
+- name: Abridge
+  ats: ashby
+  slug: abridge
+  tags:
+  - ai
+- name: Addepar
+  ats: greenhouse
+  slug: addepar1
+  tags:
+  - fintech
+- name: Adobe
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Affirm
+  ats: greenhouse
+  slug: affirm
+  tags:
+  - fintech
+- name: Agility Robotics
+  ats: greenhouse
+  slug: agilityrobotics
+  tags:
+  - robotics
+- name: Airbnb
+  ats: greenhouse
+  slug: airbnb
+  tags:
+  - product
+- name: Airtable
+  ats: greenhouse
+  slug: airtable
+  tags:
+  - product
+- name: Akuna Capital
+  ats: greenhouse
+  slug: akunacapital
+  tags:
+  - quant
+- name: Alloy
+  ats: ashby
+  slug: alloy
+  tags:
+  - fintech
+- name: Amazon
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: AMD
+  ats: unsupported
+  tags:
+  - hardware
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Anduril
+  ats: greenhouse
+  slug: andurilindustries
+  tags:
+  - defense
+  - robotics
+- name: Anthropic
+  ats: greenhouse
+  slug: anthropic
+  tags:
+  - target
+  - ai-lab
+- name: Anyscale
+  ats: ashby
+  slug: anyscale
+  tags:
+  - infra
+  - ai
+- name: Apple
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Applied Intuition
+  ats: unsupported
+  tags:
+  - robotics
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Apptronik
+  ats: greenhouse
+  slug: apptronik
+  tags:
+  - robotics
+- name: Asana
+  ats: greenhouse
+  slug: asana
+  tags:
+  - product
+- name: AssemblyAI
+  ats: greenhouse
+  slug: assemblyai
+  tags:
+  - ai
+- name: Astranis
+  ats: greenhouse
+  slug: astranis
+  tags:
+  - space
+- name: Attentive
+  ats: greenhouse
+  slug: attentive
+  tags:
+  - product
+- name: Baseten
+  ats: ashby
+  slug: baseten
+  tags:
+  - infra
+  - ai
+- name: Basis
+  ats: lever
+  slug: basis
+  tags:
+  - product
+- name: Bedrock Robotics
+  ats: ashby
+  slug: bedrock-robotics
+  tags:
+  - robotics
+- name: Belvedere Trading
+  ats: lever
+  slug: belvederetrading
+  tags:
+  - quant
+- name: Benchling
+  ats: ashby
+  slug: benchling
+  tags:
+  - product
+- name: Black Forest Labs
+  ats: ashby
+  slug: black-forest-labs
+  tags:
+  - ai-lab
+- name: Block
+  ats: greenhouse
+  slug: block
+  tags:
+  - fintech
+- name: Bloomberg
+  ats: unsupported
+  tags:
+  - fintech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Boston Dynamics
+  ats: unsupported
+  tags:
+  - robotics
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Brex
+  ats: greenhouse
+  slug: brex
+  tags:
+  - fintech
+- name: Browserbase
+  ats: ashby
+  slug: browserbase
+  tags:
+  - ai
+  - infra
+- name: Calendly
+  ats: greenhouse
+  slug: calendly
+  tags:
+  - product
+- name: Canva
+  ats: unsupported
+  tags:
+  - product
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Carta
+  ats: greenhouse
+  slug: carta
+  tags:
+  - fintech
+- name: Cartesia
+  ats: ashby
+  slug: cartesia
+  tags:
+  - ai-lab
+- name: Cerebras
+  ats: ashby
+  slug: cerebras
+  tags:
+  - hardware
+  - ai
+- name: Chainguard
+  ats: greenhouse
+  slug: chainguard
+  tags:
+  - security
+  - infra
+- name: Character.AI
+  ats: ashby
+  slug: character
+  tags:
+  - ai-lab
+- name: Chime
+  ats: greenhouse
+  slug: chime
+  tags:
+  - fintech
+- name: Circle
+  ats: ashby
+  slug: circle
+  tags:
+  - product
+  note: Circle.so (community platform), not Circle Internet Financial
+- name: Cisco
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Citadel
+  ats: unsupported
+  tags:
+  - quant
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Clay
+  ats: ashby
+  slug: claylabs
+  tags:
+  - ai
+- name: ClickHouse
+  ats: ashby
+  slug: clickhouse
+  tags:
+  - infra
+- name: Cloudflare
+  ats: greenhouse
+  slug: cloudflare
+  tags:
+  - infra
+- name: Cockroach Labs
+  ats: greenhouse
+  slug: cockroachlabs
+  tags:
+  - infra
+- name: Cognition
+  ats: ashby
+  slug: cognition
+  tags:
+  - ai
+  - devtools
+- name: Cohere
+  ats: ashby
+  slug: cohere
+  tags:
+  - ai-lab
+- name: Coinbase
+  ats: greenhouse
+  slug: coinbase
+  tags:
+  - fintech
+- name: CoreWeave
+  ats: greenhouse
+  slug: coreweave
+  tags:
+  - infra
+  - ai
+- name: Coursera
+  ats: greenhouse
+  slug: coursera
+  tags:
+  - product
+- name: Crusoe
+  ats: ashby
+  slug: crusoe
+  tags:
+  - infra
+  - ai
+- name: Cursor
+  ats: ashby
+  slug: cursor
+  tags:
+  - ai
+  - devtools
+  note: Descriptions carry SpaceX boilerplate alongside Cursor text
+- name: d-Matrix
+  ats: ashby
+  slug: d-matrix
+  tags:
+  - hardware
+  - ai
+- name: Databricks
+  ats: greenhouse
+  slug: databricks
+  tags:
+  - target
+  - infra
+  - ai
+- name: Datadog
+  ats: greenhouse
+  slug: datadog
+  tags:
+  - infra
+- name: Decagon
+  ats: ashby
+  slug: decagon
+  tags:
+  - ai
+- name: Deepgram
+  ats: ashby
+  slug: deepgram
+  tags:
+  - ai
+- name: Descript
+  ats: greenhouse
+  slug: descript
+  tags:
+  - ai
+  - product
+- name: Dexterity
+  ats: lever
+  slug: dexterity
+  tags:
+  - robotics
+- name: Discord
+  ats: greenhouse
+  slug: discord
+  tags:
+  - product
+- name: Docker
+  ats: ashby
+  slug: docker
+  tags:
+  - infra
+  - devtools
+- name: DoorDash
+  ats: greenhouse
+  slug: doordashusa
+  tags:
+  - product
+- name: Dropbox
+  ats: greenhouse
+  slug: dropbox
+  tags:
+  - product
+- name: DRW
+  ats: greenhouse
+  slug: drweng
+  tags:
+  - quant
+- name: Duolingo
+  ats: greenhouse
+  slug: duolingo
+  tags:
+  - product
+- name: Elastic
+  ats: greenhouse
+  slug: elastic
+  tags:
+  - infra
+- name: ElevenLabs
+  ats: ashby
+  slug: elevenlabs
+  tags:
+  - ai-lab
+- name: Etched
+  ats: ashby
+  slug: etched
+  tags:
+  - hardware
+  - ai
+- name: Factory
+  ats: ashby
+  slug: factory
+  tags:
+  - ai
+  - devtools
+- name: Faire
+  ats: greenhouse
+  slug: faire
+  tags:
+  - product
+- name: Figma
+  ats: greenhouse
+  slug: figma
+  tags:
+  - product
+- name: Figure AI
+  ats: greenhouse
+  slug: figureai
+  tags:
+  - robotics
+  - ai
+- name: Fireworks AI
+  ats: ashby
+  slug: fireworks
+  tags:
+  - infra
+  - ai
+- name: Five Rings
+  ats: greenhouse
+  slug: fiveringsllc
+  tags:
+  - quant
+- name: Flexport
+  ats: greenhouse
+  slug: flexport
+  tags:
+  - product
+- name: Fly.io
+  ats: lever
+  slug: fly
+  tags:
+  - infra
+- name: Formic
+  ats: greenhouse
+  slug: formic
+  tags:
+  - robotics
+- name: Gemini
+  ats: greenhouse
+  slug: gemini
+  tags:
+  - fintech
+- name: GitLab
+  ats: greenhouse
+  slug: gitlab
+  tags:
+  - devtools
+- name: Glean
+  ats: greenhouse
+  slug: gleanwork
+  tags:
+  - ai
+- name: Google
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Google DeepMind
+  ats: unsupported
+  tags:
+  - target
+  - ai-lab
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Grafana Labs
+  ats: greenhouse
+  slug: grafanalabs
+  tags:
+  - infra
+- name: Grammarly
+  ats: unsupported
+  tags:
+  - ai
+  - product
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Groq
+  ats: unsupported
+  tags:
+  - hardware
+  - ai
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Gusto
+  ats: greenhouse
+  slug: gusto
+  tags:
+  - product
+- name: Harvey
+  ats: ashby
+  slug: harvey
+  tags:
+  - ai
+- name: Hebbia
+  ats: unsupported
+  tags:
+  - ai
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Hex
+  ats: ashby
+  slug: hex
+  tags:
+  - ai
+  - devtools
+- name: Hippocratic AI
+  ats: unsupported
+  tags:
+  - ai
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Hudson River Trading
+  ats: greenhouse
+  slug: wehrtyou
+  tags:
+  - quant
+- name: Hugging Face
+  ats: unsupported
+  tags:
+  - ai
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Hume AI
+  ats: ashby
+  slug: hume-ai
+  tags:
+  - ai-lab
+- name: IBM
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Imbue
+  ats: greenhouse
+  slug: imbue
+  tags:
+  - ai-lab
+- name: IMC Trading
+  ats: greenhouse
+  slug: imc
+  tags:
+  - quant
+- name: Instacart
+  ats: greenhouse
+  slug: instacart
+  tags:
+  - product
+- name: Intel
+  ats: unsupported
+  tags:
+  - hardware
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Intuit
+  ats: unsupported
+  tags:
+  - fintech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Ironclad
+  ats: ashby
+  slug: ironcladhq
+  tags:
+  - ai
+- name: Jane Street
+  ats: greenhouse
+  slug: janestreet
+  tags:
+  - quant
+- name: Joby Aviation
+  ats: unsupported
+  tags:
+  - robotics
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Jump Trading
+  ats: greenhouse
+  slug: jumptrading
+  tags:
+  - quant
+- name: Kalshi
+  ats: ashby
+  slug: kalshi
+  tags:
+  - fintech
+- name: Khan Academy
+  ats: greenhouse
+  slug: khanacademy
+  tags:
+  - product
+- name: Kodiak Robotics
+  ats: greenhouse
+  slug: kodiak
+  tags:
+  - robotics
+- name: Lambda
+  ats: ashby
+  slug: lambda
+  tags:
+  - infra
+  - ai
+- name: LangChain
+  ats: ashby
+  slug: langchain
+  tags:
+  - ai
+  - devtools
+- name: Lightfield
+  ats: ashby
+  slug: lightfield
+  tags:
+  - target
+  - ai
+- name: Lightmatter
+  ats: greenhouse
+  slug: lightmatter
+  tags:
+  - hardware
+  - ai
+- name: Linear
+  ats: ashby
+  slug: linear
+  tags:
+  - target
+  - devtools
+  - product
+- name: LinkedIn
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Liquid AI
+  ats: ashby
+  slug: liquid-ai
+  tags:
+  - ai-lab
+- name: LlamaIndex
+  ats: ashby
+  slug: llamaindex
+  tags:
+  - ai
+  - devtools
+- name: Lovable
+  ats: ashby
+  slug: lovable
+  tags:
+  - ai
+  - devtools
+- name: Luma AI
+  ats: ashby
+  slug: lumaai
+  tags:
+  - ai-lab
+- name: Lyft
+  ats: greenhouse
+  slug: lyft
+  tags:
+  - product
+- name: Magic
+  ats: ashby
+  slug: magic.dev
+  tags:
+  - ai-lab
+- name: Mercor
+  ats: ashby
+  slug: mercor
+  tags:
+  - ai
+- name: Mercury
+  ats: greenhouse
+  slug: mercury
+  tags:
+  - fintech
+- name: Merge
+  ats: ashby
+  slug: merge
+  tags:
+  - target
+  - infra
+- name: Meta
+  ats: unsupported
+  tags:
+  - target
+  - big-tech
+  - ai-lab
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Micron
+  ats: unsupported
+  tags:
+  - hardware
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Microsoft
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Midjourney
+  ats: ashby
+  slug: midjourney
+  tags:
+  - ai-lab
+  note: Board is mostly Midjourney Medical roles
+- name: Mintlify
+  ats: ashby
+  slug: mintlify
+  tags:
+  - devtools
+- name: Miro
+  ats: ashby
+  slug: miro
+  tags:
+  - product
+- name: Mistral AI
+  ats: unsupported
+  tags:
+  - ai-lab
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Modal
+  ats: ashby
+  slug: modal
+  tags:
+  - infra
+  - ai
+- name: Modern Treasury
+  ats: ashby
+  slug: moderntreasury
+  tags:
+  - fintech
+- name: MongoDB
+  ats: greenhouse
+  slug: mongodb
+  tags:
+  - infra
+- name: Navan
+  ats: greenhouse
+  slug: tripactions
+  tags:
+  - product
+- name: Netflix
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Netlify
+  ats: greenhouse
+  slug: netlify
+  tags:
+  - infra
+- name: Nextdoor
+  ats: greenhouse
+  slug: nextdoor
+  tags:
+  - product
+- name: Notion
+  ats: ashby
+  slug: notion
+  tags:
+  - target
+  - product
+- name: Nuro
+  ats: greenhouse
+  slug: nuro
+  tags:
+  - robotics
+- name: NVIDIA
+  ats: unsupported
+  tags:
+  - target
+  - hardware
+  - ai
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Okta
+  ats: greenhouse
+  slug: okta
+  tags:
+  - security
+- name: OpenAI
+  ats: ashby
+  slug: openai
+  tags:
+  - target
+  - ai-lab
+- name: OpenEvidence
+  ats: ashby
+  slug: openevidence
+  tags:
+  - ai
+- name: Optiver
+  ats: greenhouse
+  slug: optiverus
+  tags:
+  - quant
+- name: Oracle
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Palantir
+  ats: lever
+  slug: palantir
+  tags:
+  - defense
+  - ai
+- name: Periodic Labs
+  ats: ashby
+  slug: periodic-labs
+  tags:
+  - ai-lab
+- name: Perplexity
+  ats: ashby
+  slug: perplexity
+  tags:
+  - ai-lab
+- name: Physical Intelligence
+  ats: ashby
+  slug: physicalintelligence
+  tags:
+  - ai-lab
+  - robotics
+- name: Pinecone
+  ats: ashby
+  slug: pinecone
+  tags:
+  - ai
+  - infra
+- name: Pinterest
+  ats: greenhouse
+  slug: pinterest
+  tags:
+  - product
+- name: Plaid
+  ats: ashby
+  slug: plaid
+  tags:
+  - fintech
+- name: PlanetScale
+  ats: greenhouse
+  slug: planetscale
+  tags:
+  - infra
+- name: Point72
+  ats: greenhouse
+  slug: point72
+  tags:
+  - quant
+- name: Polymarket
+  ats: ashby
+  slug: polymarket
+  tags:
+  - fintech
+- name: Poolside
+  ats: ashby
+  slug: poolside
+  tags:
+  - ai-lab
+- name: PostHog
+  ats: ashby
+  slug: posthog
+  tags:
+  - devtools
+- name: Postman
+  ats: unsupported
+  tags:
+  - devtools
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Pylon
+  ats: ashby
+  slug: pylon-labs
+  tags:
+  - ai
+- name: Qualcomm
+  ats: unsupported
+  tags:
+  - hardware
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Quora
+  ats: ashby
+  slug: quora
+  tags:
+  - product
+- name: Railway
+  ats: ashby
+  slug: railway
+  tags:
+  - infra
+- name: Ramp
+  ats: ashby
+  slug: ramp
+  tags:
+  - target
+  - fintech
+- name: Reddit
+  ats: greenhouse
+  slug: reddit
+  tags:
+  - product
+- name: Reflection AI
+  ats: ashby
+  slug: reflectionai
+  tags:
+  - ai-lab
+- name: Reka
+  ats: ashby
+  slug: reka
+  tags:
+  - ai-lab
+- name: Relativity Space
+  ats: greenhouse
+  slug: relativity
+  tags:
+  - space
+- name: Render
+  ats: ashby
+  slug: render
+  tags:
+  - infra
+- name: Replit
+  ats: ashby
+  slug: replit
+  tags:
+  - ai
+  - devtools
+- name: Retool
+  ats: unsupported
+  tags:
+  - devtools
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Rippling
+  ats: unsupported
+  tags:
+  - product
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Robinhood
+  ats: greenhouse
+  slug: robinhood
+  tags:
+  - fintech
+- name: Roblox
+  ats: greenhouse
+  slug: roblox
+  tags:
+  - product
+- name: Rocket Lab
+  ats: greenhouse
+  slug: rocketlab
+  tags:
+  - space
+- name: Rogo
+  ats: ashby
+  slug: rogo
+  tags:
+  - ai
+  - fintech
+- name: Runway
+  ats: ashby
+  slug: runway-ml
+  tags:
+  - ai-lab
+- name: Safe Superintelligence
+  ats: unsupported
+  tags:
+  - ai-lab
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Salesforce
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Samsara
+  ats: greenhouse
+  slug: samsara
+  tags:
+  - infra
+- name: Saronic
+  ats: ashby
+  slug: saronic
+  tags:
+  - defense
+  - robotics
+- name: Scale AI
+  ats: greenhouse
+  slug: scaleai
+  tags:
+  - ai
+- name: Sentry
+  ats: ashby
+  slug: sentry
+  tags:
+  - infra
+  - devtools
+- name: ServiceNow
+  ats: unsupported
+  tags:
+  - big-tech
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Shield AI
+  ats: ashby
+  slug: shieldai
+  tags:
+  - defense
+  - robotics
+- name: Sierra
+  ats: ashby
+  slug: sierra
+  tags:
+  - ai
+- name: Skydio
+  ats: ashby
+  slug: skydio
+  tags:
+  - robotics
+- name: Snap
+  ats: unsupported
+  tags:
+  - product
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Snowflake
+  ats: ashby
+  slug: snowflake
+  tags:
+  - infra
+- name: Snyk
+  ats: ashby
+  slug: snyk
+  tags:
+  - security
+- name: SoFi
+  ats: greenhouse
+  slug: sofi
+  tags:
+  - fintech
+- name: Sourcegraph
+  ats: greenhouse
+  slug: sourcegraph91
+  tags:
+  - devtools
+- name: SpaceX
+  ats: greenhouse
+  slug: spacex
+  tags:
+  - space
+- name: Speak
+  ats: ashby
+  slug: speak
+  tags:
+  - ai
+  - product
+- name: Spotify
+  ats: lever
+  slug: spotify
+  tags:
+  - product
+- name: Strava
+  ats: ashby
+  slug: strava
+  tags:
+  - product
+- name: Stripe
+  ats: greenhouse
+  slug: stripe
+  tags:
+  - target
+  - fintech
+  - infra
+- name: Suno
+  ats: ashby
+  slug: suno
+  tags:
+  - ai-lab
+- name: Supabase
+  ats: ashby
+  slug: supabase
+  tags:
+  - infra
+- name: Surge AI
+  ats: ashby
+  slug: surge-ai
+  tags:
+  - ai
+- name: Susquehanna
+  ats: unsupported
+  tags:
+  - quant
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Tailscale
+  ats: greenhouse
+  slug: tailscale
+  tags:
+  - infra
+- name: Temporal
+  ats: ashby
+  slug: temporal
+  tags:
+  - infra
+- name: Tenstorrent
+  ats: greenhouse
+  slug: tenstorrent
+  tags:
+  - hardware
+  - ai
+- name: Tesla
+  ats: unsupported
+  tags:
+  - big-tech
+  - robotics
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Thinking Machines Lab
+  ats: ashby
+  slug: thinkingmachines
+  tags:
+  - ai-lab
+- name: Together AI
+  ats: greenhouse
+  slug: togetherai
+  tags:
+  - infra
+  - ai
+- name: Tower Research Capital
+  ats: greenhouse
+  slug: towerresearchcapital
+  tags:
+  - quant
+- name: Twilio
+  ats: greenhouse
+  slug: twilio
+  tags:
+  - infra
+- name: Two Sigma
+  ats: unsupported
+  tags:
+  - quant
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Uber
+  ats: unsupported
+  tags:
+  - product
+  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
+- name: Unify
+  ats: ashby
+  slug: unify
+  tags:
+  - ai
+- name: Unit
+  ats: ashby
+  slug: unit
+  tags:
+  - fintech
+- name: Valon
+  ats: ashby
+  slug: valon
+  tags:
+  - target
+  - fintech
+  - ai
+- name: Vanta
+  ats: ashby
+  slug: vanta
+  tags:
+  - security
+- name: Vapi
+  ats: ashby
+  slug: vapi
+  tags:
+  - ai
+- name: Varda
+  ats: greenhouse
+  slug: vardaspace
+  tags:
+  - space
+- name: Vercel
+  ats: greenhouse
+  slug: vercel
+  tags:
+  - target
+  - infra
+  - devtools
+- name: Verkada
+  ats: greenhouse
+  slug: verkada
+  tags:
+  - hardware
+- name: Warp
+  ats: greenhouse
+  slug: warp
+  tags:
+  - devtools
+- name: Waymo
+  ats: greenhouse
+  slug: waymo
+  tags:
+  - target
+  - robotics
+  - ai
+- name: Wayve
+  ats: ashby
+  slug: wayve
+  tags:
+  - robotics
+  - ai
+- name: Wealthfront
+  ats: lever
+  slug: wealthfront
+  tags:
+  - fintech
+- name: Weaviate
+  ats: ashby
+  slug: weaviate
+  tags:
+  - ai
+  - infra
+- name: Webflow
+  ats: ashby
+  slug: webflow
+  tags:
+  - product
+- name: Wiz
+  ats: greenhouse
+  slug: wizinc
+  tags:
+  - security
+- name: Writer
+  ats: ashby
+  slug: writer
+  tags:
+  - ai
+- name: xAI
+  ats: greenhouse
+  slug: xai
+  tags:
+  - ai-lab
+  note: Board's company_name is 'SpaceXSI'; descriptions carry SpaceX boilerplate
+- name: Zapier
+  ats: ashby
+  slug: zapier
+  tags:
+  - product
+- name: Zipline
+  ats: greenhouse
+  slug: flyzipline
+  tags:
+  - target
+  - robotics
+- name: Zoox
+  ats: lever
+  slug: zoox
+  tags:
+  - robotics
+- name: Zscaler
+  ats: greenhouse
+  slug: zscaler
+  tags:
+  - security

@@ -1,0 +1,252 @@
+{
+ "jobs": [
+  {
+   "absolute_url": "https://boards.greenhouse.io/figma/jobs/6233043004?gh_jid=6233043004",
+   "data_compliance": [
+    {
+     "type": "gdpr",
+     "requires_consent": false,
+     "requires_processing_consent": false,
+     "requires_retention_consent": false,
+     "retention_period": null,
+     "demographic_data_consent_applies": false
+    }
+   ],
+   "internal_job_id": 5231757004,
+   "location": {
+    "name": "San Francisco, CA \u2022 New York, NY \u2022 United States"
+   },
+   "metadata": null,
+   "id": 6233043004,
+   "updated_at": "2026-10-27T14:11:12-04:00",
+   "requisition_id": "2679",
+   "title": "AI Engineer, Internal Tools",
+   "company_name": "Figma",
+   "first_published": "2026-10-27T14:11:12-04:00",
+   "language": "en",
+   "application_deadline": null,
+   "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Figma is growing our team of passionate creatives and builders on a mission to make design accessible to all. Figma\u2019s platform helps teams bring ideas to life\u2014whether you&#39;re brainstorming, creating a prototype, translating designs into code, or iterating with AI. From idea to product, Figma empowers teams to streamline workflows, move faster, and work together in real time from anywhere in the world. If you&#39;re excited to shape the future of design and collaboration, join us!&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;section page-centered&quot;&gt;\n&lt;p&gt;Figma employees are among the most AI-active in the industry, and our Internal AI team, part of FTS (our Business Technology org), helps turn that energy into meaningful impact by making it easier for every Figmate, from Sales and Support to Finance, People, and Legal, to safely adopt AI and use it to improve how they work.&amp;nbsp;&lt;/p&gt;\n&lt;p&gt;We\u2019re a small, high-leverage team organized around three pillars: Platform &amp;amp; Tooling, Infrastructure &amp;amp; Hosting, and Applied AI Builds, and this role is a key member of the Applied AI Builds pillar.&lt;/p&gt;\n&lt;p&gt;As an AI Engineer, Internal Tools, you\u2019ll work directly with teams across Figma to identify high-value AI opportunities and take them to production, moving from understanding a business workflow, to rapidly prototyping an approach, to evaluating it and integrating it with the systems and d",
+   "departments": [
+    {
+     "id": 4016247004,
+     "name": "Business Operations",
+     "child_ids": [],
+     "parent_id": null
+    }
+   ],
+   "offices": [
+    {
+     "id": 4031430004,
+     "name": "Canada",
+     "location": null,
+     "child_ids": [
+      4031432004,
+      4031431004
+     ],
+     "parent_id": 4033142004
+    },
+    {
+     "id": 4024285004,
+     "name": "US",
+     "location": null,
+     "child_ids": [],
+     "parent_id": 4033142004
+    }
+   ],
+   "ai_disclaimer": null,
+   "include_ai_disclaimer": null,
+   "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6233043004/ai_opt_out"
+  },
+  {
+   "absolute_url": "https://boards.greenhouse.io/figma/jobs/6178851004?gh_jid=6178851004",
+   "data_compliance": [
+    {
+     "type": "gdpr",
+     "requires_consent": false,
+     "requires_processing_consent": false,
+     "requires_retention_consent": false,
+     "retention_period": null,
+     "demographic_data_consent_applies": false
+    }
+   ],
+   "internal_job_id": 5209995004,
+   "location": {
+    "name": "San Francisco, CA \u2022 New York, NY"
+   },
+   "metadata": null,
+   "id": 6178851004,
+   "updated_at": "2026-10-27T13:40:12-04:00",
+   "requisition_id": "2569",
+   "title": "Data Engineer Intern (2027)",
+   "company_name": "Figma",
+   "first_published": "2026-09-23T15:30:27-04:00",
+   "language": "en",
+   "application_deadline": null,
+   "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Figma is growing our team of passionate creatives and builders on a mission to make design accessible to all. Figma\u2019s platform helps teams bring ideas to life\u2014whether you&#39;re brainstorming, creating a prototype, translating designs into code, or iterating with AI. From idea to product, Figma empowers teams to streamline workflows, move faster, and work together in real time from anywhere in the world. If you&#39;re excited to shape the future of design and collaboration, join us!&lt;/p&gt;&lt;/div&gt;&lt;p&gt;We are looking for Data Engineering interns who are excited to help scale the systems and pipelines that power decision-making at Figma. As an intern on our data team, you will partner with engineers and analysts to design and build reliable datasets, ensure data quality, and make Figma&#39;s data more accessible across the company.&lt;/p&gt;\n&lt;p&gt;This internship will be based out of our San Francisco or New York Hub.&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;What you&#39;ll do at Figma:&lt;/strong&gt;&lt;/p&gt;\n&lt;ul&gt;\n&lt;li&gt;Build, test, and document data pipelines that bring product or business data into Figma\u2019s data warehouse&lt;/li&gt;\n&lt;li&gt;Help design foundational datasets that are trusted, well-documented, and easy to use&lt;/li&gt;\n&lt;li&gt;Optimize pipelines for performance and scalability as Figma grows&lt;/li&gt;\n&lt;li&gt;Partner with cross-functional teammates to understand data needs and deliver ",
+   "departments": [
+    {
+     "id": 4016256004,
+     "name": "Early Career",
+     "child_ids": [],
+     "parent_id": null
+    }
+   ],
+   "offices": [
+    {
+     "id": 4024285004,
+     "name": "US",
+     "location": null,
+     "child_ids": [],
+     "parent_id": 4033142004
+    }
+   ],
+   "ai_disclaimer": null,
+   "include_ai_disclaimer": null,
+   "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/6178851004/ai_opt_out"
+  },
+  {
+   "absolute_url": "https://boards.greenhouse.io/figma/jobs/5426468004?gh_jid=5426468004",
+   "data_compliance": [
+    {
+     "type": "gdpr",
+     "requires_consent": false,
+     "requires_processing_consent": false,
+     "requires_retention_consent": false,
+     "retention_period": null,
+     "demographic_data_consent_applies": false
+    }
+   ],
+   "internal_job_id": 4868517004,
+   "location": {
+    "name": "San Francisco, CA \u2022 New York, NY \u2022 United States"
+   },
+   "metadata": null,
+   "id": 5426468004,
+   "updated_at": "2026-10-27T13:40:12-04:00",
+   "requisition_id": "1451",
+   "title": "Account Executive, Enterprise",
+   "company_name": "Figma",
+   "first_published": "2025-01-28T18:57:29-05:00",
+   "language": "en",
+   "application_deadline": null,
+   "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Figma is growing our team of passionate creatives and builders on a mission to make design accessible to all. Figma\u2019s platform helps teams bring ideas to life\u2014whether you&#39;re brainstorming, creating a prototype, translating designs into code, or iterating with AI. From idea to product, Figma empowers teams to streamline workflows, move faster, and work together in real time from anywhere in the world. If you&#39;re excited to shape the future of design and collaboration, join us!&lt;/p&gt;&lt;/div&gt;&lt;p&gt;We are looking for an Enterprise Account Executive who will play a critical role driving sales and maximizing revenue with our Enterprise customers. You will be responsible for targeting, building and nurturing positive relationships with key executive level decision-makers, understanding complex business needs, and delivering innovative solutions across our product suite. This is an opportunity to accelerate your career, learn from leading sellers in the industry and build an incredible network of cross functional partners at Figma.&lt;/p&gt;\n&lt;p&gt;This is a full time role that can be held from one of our US hubs or remotely in the United States.&lt;/p&gt;\n&lt;h4&gt;&lt;strong&gt;What you&#39;ll do at Figma:&lt;/strong&gt;&lt;/h4&gt;\n&lt;ul&gt;\n&lt;li&gt;Create and manage a pipeline of Enterprise accounts to consistently meet or exceed quarterly and annual sales targets&lt;/li&gt;\n&lt;li&gt;Apply effective discov",
+   "departments": [
+    {
+     "id": 4016255004,
+     "name": "Sales",
+     "child_ids": [],
+     "parent_id": null
+    }
+   ],
+   "offices": [
+    {
+     "id": 4024285004,
+     "name": "US",
+     "location": null,
+     "child_ids": [],
+     "parent_id": 4033142004
+    }
+   ],
+   "ai_disclaimer": null,
+   "include_ai_disclaimer": null,
+   "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/5426468004/ai_opt_out"
+  },
+  {
+   "absolute_url": "https://boards.greenhouse.io/figma/jobs/5579204004?gh_jid=5579204004",
+   "data_compliance": [
+    {
+     "type": "gdpr",
+     "requires_consent": false,
+     "requires_processing_consent": false,
+     "requires_retention_consent": false,
+     "retention_period": null,
+     "demographic_data_consent_applies": false
+    }
+   ],
+   "internal_job_id": 4949654004,
+   "location": {
+    "name": "Bengaluru, India"
+   },
+   "metadata": null,
+   "id": 5579204004,
+   "updated_at": "2026-10-27T13:40:12-04:00",
+   "requisition_id": "1759",
+   "title": "Account Executive, Enterprise (Bengaluru, India)",
+   "company_name": "Figma",
+   "first_published": "2025-07-21T23:53:16-04:00",
+   "language": "en",
+   "application_deadline": null,
+   "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Figma is growing our team of passionate creatives and builders on a mission to make design accessible to all. Figma\u2019s platform helps teams bring ideas to life\u2014whether you&#39;re brainstorming, creating a prototype, translating designs into code, or iterating with AI. From idea to product, Figma empowers teams to streamline workflows, move faster, and work together in real time from anywhere in the world. If you&#39;re excited to shape the future of design and collaboration, join us!&lt;/p&gt;&lt;/div&gt;&lt;p&gt;We are looking for an Enterprise Account Executive who will play a critical role driving sales and maximizing revenue with our Enterprise customers. You will be responsible for targeting, building and nurturing positive relationships with key executive level decision-makers, understanding complex business needs, and delivering innovative solutions across our product suite. This is an opportunity to accelerate your career, learn from leading sellers in the industry and build an incredible network of cross functional partners at Figma.&lt;/p&gt;\n&lt;p&gt;This is a full-time position based in our newly opened Bengaluru hub.&lt;/p&gt;\n&lt;h4&gt;&lt;strong&gt;What you&#39;ll do at Figma:&lt;/strong&gt;&lt;/h4&gt;\n&lt;ul&gt;\n&lt;li&gt;Create and manage a pipeline of Enterprise accounts to consistently meet or exceed quarterly and annual sales targets&lt;/li&gt;\n&lt;li&gt;Apply effective discovery and value-selling techniqu",
+   "departments": [
+    {
+     "id": 4016255004,
+     "name": "Sales",
+     "child_ids": [],
+     "parent_id": null
+    }
+   ],
+   "offices": [
+    {
+     "id": 4062994004,
+     "name": "Bengaluru, India",
+     "location": null,
+     "child_ids": [],
+     "parent_id": 4027787004
+    }
+   ],
+   "ai_disclaimer": null,
+   "include_ai_disclaimer": null,
+   "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/5579204004/ai_opt_out"
+  },
+  {
+   "absolute_url": "https://boards.greenhouse.io/figma/jobs/5783812004?gh_jid=5783812004",
+   "data_compliance": [
+    {
+     "type": "gdpr",
+     "requires_consent": false,
+     "requires_processing_consent": false,
+     "requires_retention_consent": false,
+     "retention_period": null,
+     "demographic_data_consent_applies": false
+    }
+   ],
+   "internal_job_id": 5042453004,
+   "location": {
+    "name": "Berlin, Germany"
+   },
+   "metadata": null,
+   "id": 5783812004,
+   "updated_at": "2026-10-27T13:40:12-04:00",
+   "requisition_id": "2117",
+   "title": "Account Executive, Enterprise (Berlin, Germany)",
+   "company_name": "Figma",
+   "first_published": "2026-02-03T07:13:56-05:00",
+   "language": "en",
+   "application_deadline": null,
+   "content": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;Figma is growing our team of passionate creatives and builders on a mission to make design accessible to all. Figma\u2019s platform helps teams bring ideas to life\u2014whether you&#39;re brainstorming, creating a prototype, translating designs into code, or iterating with AI. From idea to product, Figma empowers teams to streamline workflows, move faster, and work together in real time from anywhere in the world. If you&#39;re excited to shape the future of design and collaboration, join us!&lt;/p&gt;&lt;/div&gt;&lt;p&gt;We are looking for a Enterprise Account Executive who will play a critical role driving sales and maximizing expansion opportunities with a defined list of Enterprise customers. You will be responsible for targeting, building and nurturing positive relationships with key C-level decision-makers, understanding complex business needs, and delivering innovative solutions across our product suite. This is an opportunity to accelerate your career, learn from leading sellers in the industry and build an incredible network of cross functional partners throughout Figma.&lt;/p&gt;\n&lt;p&gt;This is a full time role that can be held from Berlin hub or remotely in Germany.&lt;/p&gt;\n&lt;h4&gt;&lt;strong&gt;What you&#39;ll do at Figma:&lt;/strong&gt;&lt;/h4&gt;\n&lt;ul&gt;\n&lt;li&gt;Manage a defined list of named enterprise accounts to consistently meet or exceed quarterly and annual sales targets&lt;/li&gt;\n&lt;li&gt;Apply effect",
+   "departments": [
+    {
+     "id": 4016255004,
+     "name": "Sales",
+     "child_ids": [],
+     "parent_id": null
+    }
+   ],
+   "offices": [
+    {
+     "id": 4024250004,
+     "name": "Berlin, DE ",
+     "location": null,
+     "child_ids": [],
+     "parent_id": 4024286004
+    }
+   ],
+   "ai_disclaimer": null,
+   "include_ai_disclaimer": null,
+   "ai_opt_out_request_url": "http://app4.greenhouse.io/ai_opt_out_request/job_post/5783812004/ai_opt_out"
+  }
+ ],
+ "meta": {
+  "total": 5
+ }
+}

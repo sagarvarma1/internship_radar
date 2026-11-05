@@ -1,0 +1,31 @@
+# Internship Radar configuration. Secrets (SMTP/Twilio/webhooks) come from env vars; see README.
+# After changing `filters`, run `radar rescore` to re-apply them to stored postings.
+
+filters:
+  # Which roles count. Options: swe, ml, research, applied_science, data, hardware
+  role_types: [swe, ml, research, applied_science]
+  # Accepted countries (ISO codes or names). [] = anywhere.
+  countries: [US]
+  allow_remote: true            # fully-remote internships pass, but score lower than hybrid/onsite
+  allow_unknown_location: true  # keep postings whose location can't be determined
+  preferred_cities: []          # e.g. [San Francisco, New York, Seattle] -> +5
+  graduation_years: []          # e.g. [2027]; postings stating a window that excludes these fail
+  degree_levels: [bs, ms]       # bs, ms, phd, mba; postings limited to other levels fail
+  preferred_tags: [target, ai-lab]  # registry tags that get +5
+  min_score: 0
+
+alerts:
+  # Any of: email, sms, discord, slack, console
+  channels: []
+  batch_threshold: 3            # more than 3 at once -> one digest message per channel
+  min_score: 0
+  sms_max_items: 5
+  sms_quiet_hours: [23, 7]      # SMS held (not dropped) from 11pm to 7am
+  timezone: America/Los_Angeles
+  # Recipients: set RADAR_EMAIL_TO / RADAR_SMS_TO env vars (kept out of the public repo).
+
+poll:
+  interval_minutes: 10
+  concurrency: 6
+  per_host_interval_seconds: 1.0
+  max_backoff_hours: 6

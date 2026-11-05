@@ -1,0 +1,26 @@
+{
+  "$comment": "Internship Radar on Orbit. Targets the Python runtime, cron jobs and volumes planned for Orbit; see DEPLOY.md for the exact behaviour this file assumes.",
+  "name": "internship-radar",
+  "runtime": "python",
+  "pythonVersion": "3.12",
+  "install": "pip install uv && uv sync --frozen --no-dev",
+  "web": {
+    "command": "uv run --no-dev radar serve --host 0.0.0.0 --port $PORT",
+    "healthcheck": "/healthz"
+  },
+  "crons": [
+    {
+      "name": "poll",
+      "schedule": "*/10 * * * *",
+      "command": "uv run --no-dev radar poll --spread 300",
+      "timeoutSeconds": 540,
+      "concurrency": "forbid"
+    }
+  ],
+  "volumes": [
+    { "name": "radar-data", "mountPath": "/data", "sizeGB": 1 }
+  ],
+  "env": {
+    "RADAR_DB": "/data/radar.db"
+  }
+}
