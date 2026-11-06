@@ -17,6 +17,7 @@ class ATS(StrEnum):
     ASHBY = "ashby"
     GREENHOUSE = "greenhouse"
     LEVER = "lever"
+    WORKDAY = "workday"
     UNSUPPORTED = "unsupported"
 
 
@@ -36,6 +37,7 @@ class Company:
     tags: tuple[str, ...] = ()
     lever_region: str = "global"  # "global" or "eu"
     note: str | None = None  # e.g. why it is unsupported
+    origin: str = "curated"  # curated (registry.yaml) | discovered (discovered.yaml)
 
     @property
     def key(self) -> str:

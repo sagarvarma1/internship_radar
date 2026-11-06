@@ -15,12 +15,20 @@
       "command": "uv run --no-dev radar poll",
       "timeoutSeconds": 55,
       "concurrency": "forbid"
+    },
+    {
+      "name": "discover",
+      "schedule": "0 9 * * 1",
+      "command": "uv run --no-dev radar discover-all",
+      "timeoutSeconds": 18000,
+      "concurrency": "forbid"
     }
   ],
   "volumes": [
     { "name": "radar-data", "mountPath": "/data", "sizeGB": 2 }
   ],
   "env": {
-    "RADAR_DB": "/data/radar.db"
+    "RADAR_DB": "/data/radar.db",
+    "RADAR_DISCOVERED": "/data/discovered.yaml"
   }
 }

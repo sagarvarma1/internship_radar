@@ -747,12 +747,13 @@ companies:
   tags:
   - robotics
 - name: NVIDIA
-  ats: unsupported
+  ats: workday
+  slug: nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+  careers_url: https://www.nvidia.com/en-us/about-nvidia/careers/
   tags:
   - target
   - hardware
   - ai
-  note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
 - name: Okta
   ats: greenhouse
   slug: okta

@@ -19,9 +19,10 @@ h2 { font-size: 16px; margin: 28px 0 10px; }
 {% endblock %}
 {% block body %}
 <h1>Companies we watch</h1>
-<p class="muted" style="margin:0">Every board below is checked every minute. Last check {{ stats.last_poll | age }}{% if stats.last_poll and stats.last_poll|age != "now" %} ago{% endif %}.</p>
+<p class="muted" style="margin:0">Companies with internships open are checked every minute; the rest at least every 15 minutes, so a company's first internship is still caught fast. Last check {{ stats.last_poll | age }}{% if stats.last_poll and stats.last_poll|age != "now" %} ago{% endif %}.</p>
 <div class="stats">
-  <div class="stat card"><b>{{ rows|length }}</b><span>companies</span></div>
+  <div class="stat card"><b>{{ total_boards }}</b><span>companies watched</span></div>
+  <div class="stat card"><b>{{ rows|length }}</b><span>hiring interns now</span></div>
   <div class="stat card"><b>{{ data.open_internships }}</b><span>open internships</span></div>
   {% for ats, n in per_ats.items() %}<div class="stat card"><b>{{ n }}</b><span>on {{ ats|title }}</span></div>{% endfor %}
 </div>
@@ -33,6 +34,8 @@ h2 { font-size: 16px; margin: 28px 0 10px; }
   <td class="num hide-sm muted">{{ r.open_postings }}</td>
   <td class="small">{% if r.consecutive_failures >= 3 %}<span class="dot bad"></span>Not responding{% elif r.consecutive_failures %}<span class="dot warn"></span>Retrying{% elif r.last_success_at %}<span class="dot"></span><span class="muted">{{ r.last_success_at|age }}</span>{% else %}<span class="muted">Pending</span>{% endif %}</td>
 </tr>{% endfor %}</tbody></table></div>
+{% if quiet %}<h2>Also watching ({{ quiet|length }})</h2>
+<p class="uns">No internships open right now: {{ quiet|join(", ") }}.</p>{% endif %}
 <h2>Not covered</h2>
-<p class="uns">These companies don't publish a public job board we can read (they use Workday or their own site), so we don't track them: {% for c in data.unsupported %}{{ c.name }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>
+<p class="uns">These companies run their own careers site or an applicant system we don't read yet (such as iCIMS or SmartRecruiters), so we don't track them: {% for c in data.unsupported %}{{ c.name }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>
 {% endblock %}

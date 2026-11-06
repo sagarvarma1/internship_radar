@@ -30,8 +30,24 @@ class FetchResult:
         return self.status in (200, 304)
 
 
+# Hosts that share infrastructure get one shared budget: every *.myworkdayjobs.com tenant is
+# Workday's, so they're rate limited together rather than per tenant.
+HOST_GROUPS = {
+    "myworkdayjobs.com": 0.1,           # ~10 requests/second across all of Workday's tenants
+    "api.ashbyhq.com": 0.1,             # served from Cloudflare's cache (max-age=60)
+    "boards-api.greenhouse.io": 0.08,   # ETag 304s for unchanged boards
+}
+
+
+def host_group(host: str) -> str:
+    for suffix in HOST_GROUPS:
+        if host == suffix or host.endswith("." + suffix):
+            return suffix
+    return host
+
+
 class HostLimiter:
-    """At most one request per `min_interval` seconds to each host."""
+    """At most one request per `min_interval` seconds to each host (or host group)."""
 
     def __init__(self, min_interval: float = 1.0):
         self.min_interval = min_interval
@@ -39,13 +55,15 @@ class HostLimiter:
         self._locks: dict[str, asyncio.Lock] = {}
 
     async def wait(self, host: str) -> None:
+        host = host_group(host)
+        interval = HOST_GROUPS.get(host, self.min_interval)
         lock = self._locks.setdefault(host, asyncio.Lock())
         async with lock:
             now = time.monotonic()
             ready = self._next.get(host, 0.0)
             if ready > now:
                 await asyncio.sleep(ready - now)
-            self._next[host] = max(now, ready) + self.min_interval
+            self._next[host] = max(now, ready) + interval
 
 
 class Fetcher:
@@ -70,19 +88,32 @@ class Fetcher:
         await self.client.aclose()
 
     async def get_json(self, url: str, etag: str | None = None) -> FetchResult:
-        host = urlparse(url).netloc
         headers = {"If-None-Match": etag} if etag else {}
+        return await self._request("GET", url, headers=headers, etag=etag)
+
+    async def post_json(self, url: str, body: dict) -> FetchResult:
+        return await self._request("POST", url, json=body, headers={"Content-Type": "application/json"})
+
+    async def get_text(self, url: str) -> FetchResult:
+        """HTML pages (company names during discovery). data = text."""
+        return await self._request("GET", url, headers={"Accept": "text/html"}, as_text=True)
+
+    async def _request(self, method: str, url: str, *, headers: dict, etag: str | None = None,
+                       json: dict | None = None, as_text: bool = False) -> FetchResult:
+        host = urlparse(url).netloc
         last = FetchResult(status=0, error="not attempted")
         for attempt in range(self.retries + 1):
             await self.limiter.wait(host)
             try:
-                r = await self.client.get(url, headers=headers)
+                r = await self.client.request(method, url, headers=headers, json=json)
             except httpx.HTTPError as e:
                 last = FetchResult(status=0, error=f"{type(e).__name__}: {e}")
             else:
                 if r.status_code == 304:
                     return FetchResult(status=304, etag=etag)
                 if r.status_code == 200:
+                    if as_text:
+                        return FetchResult(status=200, data=r.text)
                     try:
                         return FetchResult(status=200, data=r.json(), etag=r.headers.get("etag"))
                     except ValueError as e:

@@ -1,0 +1,32 @@
+{% for r in rows %}
+{% set pay = r.requirements.get("pay_hourly") %}
+<li class="job" data-uids="{{ r.uids|join(' ') }}">
+  <div class="logo" style="--h:{{ (r.company|sum_ord) % 360 }}">{{ r.company[0]|upper }}</div>
+  <div>
+    <div class="company">{{ r.company }}{% if r.is_new %}<span class="badge-new">NEW</span>{% endif %}</div>
+    <a class="title" href="{{ r.apply_url }}" target="_blank" rel="noopener">{{ r.title }}</a>
+    {% if r.variants|length > 1 %}
+    <div class="meta">{% for v in r.variants %}<a class="loc" href="{{ v.apply_url }}" target="_blank" rel="noopener">{{ v.locations[0] if v.locations else "Location " ~ loop.index }}</a>{% if not loop.last %} · {% endif %}{% endfor %}{% if r.remote in ("remote", "hybrid") %} · {{ r.remote|title }}{% endif %}</div>
+    {% else %}
+    <div class="meta">{{ r.locations[:3]|join(" · ") or "Location not listed" }}{% if r.locations|length > 3 %} +{{ r.locations|length - 3 }}{% endif %}{% if r.remote in ("remote", "hybrid") %} · {{ r.remote|title }}{% endif %}</div>
+    {% endif %}
+    {% if r.chips %}<div class="chips">{% for c in r.chips %}<span class="chip{% if c.startswith('$') %} money{% endif %}">{{ c }}</span>{% endfor %}</div>{% endif %}
+    {% if user and r.checks %}
+    <details class="why"><summary>{% if r.passes %}Why it fits you{% else %}Why it's not a match{% endif %} <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3" stroke="currentColor" fill="none" stroke-width="1.5"/></svg></summary>
+      <ul>{% for x in r.checks %}<li class="{% if x.startswith('✓') %}ok{% elif x.startswith('⚠') %}warn{% else %}fail{% endif %}">{{ x.replace('filtered: ', '✕ ') }}</li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+  </div>
+  <div class="side">
+    {% set a = r.fresh_at|age %}<span class="age{% if (a.endswith('m') and not a.endswith('mo')) or a == 'now' or a.endswith('h') %} fresh{% endif %}" title="Posted {{ r.fresh_at[:10] }}">{{ a }}</span>
+    {% if user %}
+    <div class="acts">
+      <button class="ico{% if r.status == 'interested' %} on{% endif %}" data-s="interested" title="Save" aria-label="Save"><svg viewBox="0 0 16 16"><path d="M4 2h8v12l-4-3-4 3z" fill="currentColor"/></svg></button>
+      <button class="ico{% if r.status == 'applied' %} on{% endif %}" data-s="applied" title="Mark applied" aria-label="Mark applied"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>
+      <button class="ico{% if r.status == 'skipped' %} on{% endif %}" data-s="skipped" title="Hide" aria-label="Hide"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2"/></svg></button>
+    </div>
+    {% endif %}
+    <a class="btn small ghost" href="{{ r.apply_url }}" target="_blank" rel="noopener">Apply</a>
+  </div>
+</li>
+{% endfor %}

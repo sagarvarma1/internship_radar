@@ -133,3 +133,17 @@ def test_companies_and_healthz(client):
     assert "Companies we watch" in client.get("/companies").text
     j = client.get("/healthz").json()
     assert j["ok"] and j["mail"] == "console"
+
+
+def test_rows_endpoint_search_filter_and_paging(client):
+    r = client.get("/rows?tab=all&q=machine")
+    assert r.status_code == 200 and r.headers["X-Total"] == "1"
+    assert "Machine Learning Intern" in r.text and "Software Engineer Intern" not in r.text
+    r = client.get("/rows?tab=all&term=summer-2027")
+    assert r.headers["X-Total"] == "1" and "Software Engineer Intern (Summer 2027)" in r.text
+    r = client.get("/rows?tab=all&role=ml")
+    assert "Machine Learning Intern" in r.text
+    r = client.get("/rows?tab=all&sort=pay")
+    assert r.text.index("Software Engineer Intern") < r.text.index("Machine Learning Intern")  # $50/hr first
+    r = client.get("/rows?tab=all&offset=60")
+    assert r.headers["X-Total"] == "2" and r.headers["X-Next-Offset"] == "" and "<li" not in r.text

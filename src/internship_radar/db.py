@@ -34,7 +34,10 @@ CREATE TABLE IF NOT EXISTS companies (
     last_error TEXT,
     consecutive_failures INTEGER NOT NULL DEFAULT 0,
     open_postings INTEGER NOT NULL DEFAULT 0,
-    open_internships INTEGER NOT NULL DEFAULT 0
+    open_internships INTEGER NOT NULL DEFAULT 0,
+    source TEXT NOT NULL DEFAULT 'curated',   -- curated | discovered
+    last_internship_at TEXT,                  -- newest first_seen of any internship (polling tier)
+    meta TEXT NOT NULL DEFAULT '{}'           -- ATS-specific state (Workday facet, sync times)
 );
 
 CREATE TABLE IF NOT EXISTS postings (
@@ -149,7 +152,17 @@ def connect(path: str | Path) -> sqlite3.Connection:
     conn.execute("PRAGMA busy_timeout=30000")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(SCHEMA)
+    _migrate(conn)
     return conn
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Add columns introduced after a database was created."""
+    have = {r["name"] for r in conn.execute("PRAGMA table_info(companies)")}
+    for name, ddl in (("source", "TEXT NOT NULL DEFAULT 'curated'"), ("last_internship_at", "TEXT"),
+                      ("meta", "TEXT NOT NULL DEFAULT '{}'")):
+        if name not in have:
+            conn.execute(f"ALTER TABLE companies ADD COLUMN {name} {ddl}")
 
 
 def _hash(token: str) -> str:
@@ -165,11 +178,12 @@ def sync_registry(conn: sqlite3.Connection, companies: Iterable[Company]) -> Non
     for c in companies:
         keys.append(c.key)
         conn.execute(
-            """INSERT INTO companies (key, name, ats, slug, careers_url, tags, note, active)
-               VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+            """INSERT INTO companies (key, name, ats, slug, careers_url, tags, note, active, source)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
                ON CONFLICT(key) DO UPDATE SET name=excluded.name, careers_url=excluded.careers_url,
-                 tags=excluded.tags, note=excluded.note, active=1""",
-            (c.key, c.name, str(c.ats), c.slug, c.careers_url, json.dumps(list(c.tags)), c.note),
+                 tags=excluded.tags, note=excluded.note, active=1, source=excluded.source""",
+            (c.key, c.name, str(c.ats), c.slug, c.careers_url, json.dumps(list(c.tags)), c.note,
+             c.origin),
         )
     placeholders = ",".join("?" * len(keys)) or "''"
     conn.execute(f"UPDATE companies SET active=0 WHERE key NOT IN ({placeholders})", keys)
@@ -204,9 +218,10 @@ def record_not_modified(conn: sqlite3.Connection, key: str) -> None:
 
 
 def apply_snapshot(conn: sqlite3.Connection, company_key: str, etag: str | None,
-                   postings: list[tuple[Posting, "object"]]) -> dict:
-    """Store a full board snapshot of (posting, Analysis) pairs. New internships get
-    notify_pending=1 unless this is the board's baseline (first) snapshot."""
+                   postings: list[tuple[Posting, "object"]], full: bool = True) -> dict:
+    """Store a board snapshot of (posting, Analysis) pairs. New internships get notify_pending=1
+    unless this is the board's baseline (first) snapshot. full=False (a partial listing, e.g.
+    Workday's newest page) only adds/updates: nothing missing from it is marked closed."""
     t = now()
     state = get_company_state(conn, company_key)
     baseline = not (state and state["baselined"])
@@ -254,7 +269,7 @@ def apply_snapshot(conn: sqlite3.Connection, company_key: str, etag: str | None,
         open_rows = conn.execute(
             "SELECT uid FROM postings WHERE company_key=? AND closed_at IS NULL", (company_key,)
         ).fetchall()
-        gone = [r["uid"] for r in open_rows if r["uid"] not in seen]
+        gone = [r["uid"] for r in open_rows if r["uid"] not in seen] if full else []
         conn.executemany(
             "UPDATE postings SET closed_at=?, notify_pending=0 WHERE uid=?", [(t, u) for u in gone]
         )
@@ -265,8 +280,10 @@ def apply_snapshot(conn: sqlite3.Connection, company_key: str, etag: str | None,
         ).fetchone()
         conn.execute(
             """UPDATE companies SET etag=?, baselined=1, last_polled_at=?, last_success_at=?,
-                 consecutive_failures=0, open_postings=?, open_internships=? WHERE key=?""",
-            (etag, t, t, counts["n"], counts["i"], company_key),
+                 consecutive_failures=0, open_postings=?, open_internships=?,
+                 last_internship_at=COALESCE((SELECT MAX(first_seen_at) FROM postings
+                   WHERE company_key=? AND is_internship=1), last_internship_at) WHERE key=?""",
+            (etag, t, t, counts["n"], counts["i"], company_key, company_key),
         )
         conn.execute("COMMIT")
     except Exception:

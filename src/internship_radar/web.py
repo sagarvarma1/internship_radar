@@ -108,6 +108,8 @@ def open_internships(c) -> list[dict]:
                 "posted_at": r["posted_at"], "chips": json.loads(r["chips"]),
                 "roles": json.loads(r["role_types"]), "tags": tags.get(r["company_key"], ()),
                 "requirements": json.loads(r["requirements"]),
+                "_text": " ".join([r["company"], r["title"], " ".join(json.loads(r["locations"])),
+                                   r["team"] or r["department"] or ""]).lower(),
                 "_posting": db.row_to_posting(r), "_analysis": db.row_to_analysis(r),
             })
         _cache.update(key=key, rows=rows)
@@ -141,7 +143,7 @@ def personalize(rows: list[dict], cfg: FilterConfig, statuses: dict[str, str]) -
     out = []
     for r in rows:
         m = score(r["_posting"], r["_analysis"], cfg, r["tags"], now)
-        d = {k: v for k, v in r.items() if not k.startswith("_")}
+        d = {k: v for k, v in r.items() if k == "_text" or not k.startswith("_")}
         # Age shown = when the company published it, if that's earlier than when we first saw it
         # (we've watched it since before it was posted); otherwise when we caught it.
         fresh = r["first_seen_at"]
@@ -197,34 +199,85 @@ def upcoming_terms(now: datetime | None = None) -> list[str]:
 # ---------------------------------------------------------------- pages
 
 
+PAGE_SIZE = 60
+TECH_ROLES = {"swe", "ml", "research", "applied_science", "data", "hardware"}
+SEASON_ORDER = ["winter", "spring", "summer", "fall"]
+_personal_cache: dict = {}
+
+
+def scored_rows(c, user) -> list[dict]:
+    """Every open internship scored for this user (or the default filters for visitors). Cached
+    until the data, the user's settings or their statuses change, so search and paging are fast."""
+    statuses, sig = {}, ""
+    if user:
+        rows = c.execute("SELECT uid, status, updated_at FROM user_postings WHERE user_id=?",
+                         (user["id"],)).fetchall()
+        statuses = {r["uid"]: r["status"] for r in rows}
+        sig = f"{len(rows)}:{max((r['updated_at'] for r in rows), default='')}"
+    base = open_internships(c)
+    key = (user["id"] if user else None, _cache["key"], user["profile"] if user else "",
+           user["filters"] if user else "", sig)
+    hit = _personal_cache.get(key[0])
+    if hit and hit[0] == key:
+        return hit[1]
+    rows = personalize(base, user_config(user, settings), statuses)
+    if len(_personal_cache) > 500:
+        _personal_cache.clear()
+    _personal_cache[key[0]] = (key, rows)
+    return rows
+
+
+def tab_counts(rows: list[dict]) -> dict:
+    return {
+        "all": sum(1 for r in rows if r["status"] != "skipped" and TECH_ROLES & set(r["roles"])),
+        "foryou": sum(1 for r in rows if r["passes"] and r["status"] != "skipped"),
+        "saved": sum(1 for r in rows if r["status"] == "interested"),
+        "applied": sum(1 for r in rows if r["status"] == "applied"),
+        "hidden": sum(1 for r in rows if r["status"] == "skipped"),
+    }
+
+
+def select_rows(rows: list[dict], tab: str, q: str = "", term: str = "", role: str = "",
+                sort: str = "new", since: str | None = None) -> list[dict]:
+    if tab == "foryou":
+        rows = [r for r in rows if r["passes"] and r["status"] != "skipped"]
+    elif tab == "all":  # tech internships; we watch thousands of employers, not all of them tech
+        rows = [r for r in rows if r["status"] != "skipped" and TECH_ROLES & set(r["roles"])]
+    else:
+        want = {"saved": "interested", "applied": "applied", "hidden": "skipped"}[tab]
+        rows = [r for r in rows if r["status"] == want]
+    words = q.lower().split()
+    if words:
+        rows = [r for r in rows if all(w in r["_text"] for w in words)]
+    if term:
+        season, _, year = term.partition("-")
+        rows = [r for r in rows if any((s == season or s is None) and str(y) == year
+                                       for s, y in r["requirements"].get("terms", []))]
+    if role:
+        rows = [r for r in rows if role in r["roles"]]
+    rows = [{**r, "is_new": bool(since and r["first_seen_at"] > since)} for r in rows]
+    rows = group_rows(rows)
+    if sort == "score":
+        rows.sort(key=lambda r: (r["score"], r["fresh_at"]), reverse=True)
+    elif sort == "pay":
+        rows.sort(key=lambda r: ((r["requirements"].get("pay_hourly") or [0, 0])[1], r["fresh_at"]), reverse=True)
+    else:
+        rows.sort(key=lambda r: r["fresh_at"], reverse=True)
+    return rows
+
+
+def _tab(user, tab):
+    tab = tab or ("foryou" if user else "all")
+    return "all" if tab not in ("foryou", "all", "saved", "applied", "hidden") or (tab != "all" and not user) else tab
+
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, tab: str | None = None):
     c = conn()
     try:
         user = current_user(request, c)
-        tab = tab or ("foryou" if user else "all")
-        if tab not in ("foryou", "all", "saved", "applied", "hidden") or (tab != "all" and not user):
-            tab = "all"
-        statuses = {}
-        if user:
-            statuses = {r["uid"]: r["status"] for r in c.execute(
-                "SELECT uid, status FROM user_postings WHERE user_id=?", (user["id"],))}
-        rows = personalize(open_internships(c), user_config(user, settings), statuses)
-        counts = {
-            "all": len(rows),
-            "foryou": sum(1 for r in rows if r["passes"] and r["status"] != "skipped"),
-            "saved": sum(1 for r in rows if r["status"] == "interested"),
-            "applied": sum(1 for r in rows if r["status"] == "applied"),
-            "hidden": sum(1 for r in rows if r["status"] == "skipped"),
-        }
-        if tab == "foryou":
-            rows = [r for r in rows if r["passes"] and r["status"] != "skipped"]
-        elif tab == "all":
-            rows = [r for r in rows if r["status"] != "skipped"]
-        else:
-            want = {"saved": "interested", "applied": "applied", "hidden": "skipped"}[tab]
-            rows = [r for r in rows if r["status"] == want]
-
+        tab = _tab(user, tab)
+        rows = scored_rows(c, user)
         since = None
         if user:  # "new since your last visit": a visit ends after 30 idle minutes
             prev, cur, t = user["visit_prev"], user["visit_cur"], db.now()
@@ -232,17 +285,33 @@ def home(request: Request, tab: str | None = None):
                 prev = cur
             c.execute("UPDATE users SET visit_prev=?, visit_cur=? WHERE id=?", (prev, t, user["id"]))
             since = prev
-        for r in rows:
-            r["is_new"] = bool(since and r["first_seen_at"] > since)
-        rows = group_rows(rows)
-        rows.sort(key=lambda r: r["fresh_at"], reverse=True)
+        chosen = select_rows(rows, tab, since=since)
         terms = sorted({f"{s}-{y}" for r in rows for s, y in r["requirements"].get("terms", []) if s},
-                       key=lambda t: (t.split("-")[1], ["winter", "spring", "summer", "fall"].index(t.split("-")[0])))
+                       key=lambda t: (t.split("-")[1], SEASON_ORDER.index(t.split("-")[0])))
         return templates.TemplateResponse(request, "home.html", {
-            "user": user, "tab": tab, "rows": rows, "counts": counts, "terms": terms,
-            "stats": site_stats(c), "needs_profile": bool(user and not profile_complete(user)),
-            "new_count": sum(r["is_new"] for r in rows),
+            "user": user, "tab": tab, "rows": chosen[:PAGE_SIZE], "total": len(chosen),
+            "next_offset": PAGE_SIZE if len(chosen) > PAGE_SIZE else None, "since": since or "",
+            "counts": tab_counts(rows), "terms": terms, "stats": site_stats(c),
+            "needs_profile": bool(user and not profile_complete(user)),
         })
+    finally:
+        c.close()
+
+
+@app.get("/rows", response_class=HTMLResponse)
+def more_rows(request: Request, tab: str | None = None, q: str = "", term: str = "", role: str = "",
+              sort: str = "new", offset: int = 0, since: str = ""):
+    """List fragment for search, filters and "Show more" (no full page reload)."""
+    c = conn()
+    try:
+        user = current_user(request, c)
+        chosen = select_rows(scored_rows(c, user), _tab(user, tab), q[:100], term, role, sort,
+                             since or None)
+        offset = max(0, offset)
+        page = chosen[offset: offset + PAGE_SIZE]
+        nxt = offset + PAGE_SIZE if len(chosen) > offset + PAGE_SIZE else ""
+        html = templates.get_template("_rows.html").render(rows=page, user=user)
+        return HTMLResponse(html, headers={"X-Total": str(len(chosen)), "X-Next-Offset": str(nxt)})
     finally:
         c.close()
 
@@ -497,12 +566,15 @@ def companies(request: Request):
             """SELECT * FROM companies WHERE active=1 AND ats!='unsupported'
                ORDER BY open_internships DESC, name COLLATE NOCASE""")]
         stats = site_stats(c)
+        broken = sum(1 for r in rows if r["consecutive_failures"] >= 3)
     finally:
         c.close()
     for r in rows:
         r["tags"] = json.loads(r["tags"])
     return templates.TemplateResponse(request, "companies.html", {
-        "user": user, "rows": rows, "data": data, "stats": stats,
+        "user": user, "rows": [r for r in rows if r["open_internships"]], "total_boards": len(rows),
+        "quiet": sorted((r["name"] for r in rows if not r["open_internships"]), key=str.lower),
+        "broken": broken, "data": data, "stats": stats,
         "per_ats": dict(sorted(data["per_ats"].items()))})
 
 

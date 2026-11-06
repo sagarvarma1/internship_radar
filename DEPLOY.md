@@ -8,6 +8,8 @@ Radar needs three things from a host:
 3. A **persistent disk** shared by both, holding one SQLite file (`RADAR_DB`, WAL mode, so the web
    app and poller can use it at the same time). It holds user accounts, so back it up.
 
+Also schedule `radar discover-all` weekly (or run it by hand and commit `discovered.yaml`).
+
 And from you: an email sender. For a public site use [Resend](https://resend.com) with a domain
 you control (add its DNS records so mail isn't flagged as spam), then set `RESEND_API_KEY` and
 `EMAIL_FROM`. Set `RADAR_SITE_URL` to the public https URL.

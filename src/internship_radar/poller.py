@@ -4,30 +4,52 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-import random
 import sqlite3
 import time
 from datetime import UTC, datetime, timedelta
 
-from . import db
-from . import alerts
+from . import alerts, db, workday
 from .ats import board_url, parse
-from .config import Settings, load_registry
+from .config import Settings, load_companies
 from .fetch import Fetcher, HostLimiter
 from .filters import analyze
 from .models import ATS, Company
 
 
+def tier_interval(state: sqlite3.Row | None, settings: Settings, at: datetime) -> timedelta:
+    """How often a board is polled.
+      every minute  curated boards, and discovered boards with an internship open now
+      5 minutes     discovered boards that had an internship in the last 180 days
+      15 minutes    discovered boards with jobs but no recent internships (still watched, just
+                    less often, so a company's first internship is caught within 15 minutes)
+      60 minutes    discovered boards with no jobs at all
+    """
+    base = timedelta(minutes=settings.poll.interval_minutes)
+    if state is None or state["source"] != "discovered" or not state["baselined"]:
+        return base
+    if state["open_internships"]:
+        return base
+    if state["last_internship_at"] and \
+            at - datetime.fromisoformat(state["last_internship_at"]) < timedelta(days=180):
+        return timedelta(minutes=5)
+    if state["open_postings"]:
+        return timedelta(minutes=15)
+    return timedelta(minutes=60)
+
+
 def _due(state: sqlite3.Row | None, settings: Settings, at: datetime) -> bool:
-    """Back off boards that keep failing: after 3 straight failures, wait
-    interval * 2^(failures-2), capped at max_backoff_hours."""
-    if state is None or state["consecutive_failures"] < 3 or not state["last_error_at"]:
+    if state is None or not state["last_polled_at"]:
         return True
-    wait = min(
-        timedelta(minutes=settings.poll.interval_minutes) * 2 ** (state["consecutive_failures"] - 2),
-        timedelta(hours=settings.poll.max_backoff_hours),
-    )
-    return at - datetime.fromisoformat(state["last_error_at"]) >= wait
+    # Back off boards that keep failing: after 3 straight failures, wait interval * 2^(failures-2),
+    # capped at max_backoff_hours.
+    if state["consecutive_failures"] >= 3 and state["last_error_at"]:
+        wait = min(
+            timedelta(minutes=settings.poll.interval_minutes) * 2 ** (state["consecutive_failures"] - 2),
+            timedelta(hours=settings.poll.max_backoff_hours),
+        )
+        return at - datetime.fromisoformat(state["last_error_at"]) >= wait
+    # 10 s of slack so a board polled at 12:00:03 is due again at the 12:01:00 run
+    return at - datetime.fromisoformat(state["last_polled_at"]) >= tier_interval(state, settings, at) - timedelta(seconds=10)
 
 
 def stagger_offset(key: str, window: float) -> float:
@@ -40,6 +62,8 @@ def stagger_offset(key: str, window: float) -> float:
 async def poll_company(
     conn: sqlite3.Connection, fetcher: Fetcher, company: Company, settings: Settings
 ) -> dict:
+    if company.ats is ATS.WORKDAY:
+        return await workday.poll(conn, fetcher, company)
     state = db.get_company_state(conn, company.key)
     etag = state["etag"] if state and state["baselined"] else None
     res = await fetcher.get_json(board_url(company), etag=etag)
@@ -62,14 +86,17 @@ async def poll_company(
 async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str] | None = None,
                    fetcher: Fetcher | None = None, send_alerts: bool = True) -> dict:
     conn = db.connect(settings.db_path)
-    companies = load_registry(settings.registry_path)
+    companies = load_companies(settings)
     db.sync_registry(conn, companies)
     targets = [c for c in companies if c.ats is not ATS.UNSUPPORTED]
     if only:
         wanted = {o.lower() for o in only}
         targets = [c for c in targets if c.name.lower() in wanted or (c.slug or "").lower() in wanted]
     at = datetime.now(UTC)
-    targets = [c for c in targets if _due(db.get_company_state(conn, c.key), settings, at)]
+    states = {c.key: db.get_company_state(conn, c.key) for c in targets}
+    targets = [c for c in targets if _due(states[c.key], settings, at)]
+    # most overdue first, so if a run hits its deadline the boards it skipped go first next time
+    targets.sort(key=lambda c: (states[c.key]["last_polled_at"] or "") if states[c.key] else "")
 
     # Polling every minute: never overlap with a run that's still going (a crashed run that never
     # finished stops blocking after 5 minutes).
@@ -88,7 +115,12 @@ async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str
     sem = asyncio.Semaphore(settings.poll.concurrency)
     start = time.monotonic()
 
+    deadline = settings.poll.deadline_seconds
+
     async def one(c: Company) -> dict:
+        if deadline and time.monotonic() - start > deadline:
+            # out of time for this minute: leave it for the next run (it's now the most overdue)
+            return {"company": c.name, "status": "deferred"}
         if spread_seconds:
             delay = stagger_offset(c.key, spread_seconds) - (time.monotonic() - start)
             if delay > 0:
@@ -100,7 +132,6 @@ async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str
                 db.record_failure(conn, c.key, f"{type(e).__name__}: {e}")
                 return {"company": c.name, "status": "error", "error": str(e)}
 
-    random.shuffle(targets)
     try:
         results = await asyncio.gather(*(one(c) for c in targets))
     finally:
@@ -113,9 +144,12 @@ async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str
         alert_status = alerts.run(conn, settings, tags)
     db.cleanup(conn)
 
+    deferred = sum(r["status"] == "deferred" for r in results)
+    results = [r for r in results if r["status"] != "deferred"]
     ok = sum(r["status"] != "error" for r in results)
     summary = {
         "companies": len(results),
+        "deferred": deferred,
         "ok": ok,
         "failed": len(results) - ok,
         "new_postings": sum(r.get("new", 0) for r in results),

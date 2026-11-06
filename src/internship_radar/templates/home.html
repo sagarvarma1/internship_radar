@@ -20,7 +20,6 @@
 .jobs .job:first-child { border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
 .jobs .job:last-child { border-bottom: 0; }
 .job:hover { background: var(--hover); }
-.job.hidden-row { display: none; }
 .logo { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; font-size: 16px;
   color: hsl(var(--h) 55% 40%); background: hsl(var(--h) 80% 95%); }
 @media (prefers-color-scheme: dark) { .logo { color: hsl(var(--h) 70% 75%); background: hsl(var(--h) 40% 16%); } }
@@ -54,6 +53,7 @@
 .why li.ok { color: var(--good); }
 .why li.warn { color: var(--warn); }
 .why li.fail { color: var(--bad); }
+.more { text-align: center; margin: 16px 0; }
 .empty { padding: 48px 16px; text-align: center; color: var(--muted); }
 .empty b { display: block; color: var(--text); font-size: 16px; margin-bottom: 4px; }
 @media (max-width: 640px) {
@@ -97,46 +97,13 @@
   <select id="sort" aria-label="Sort"><option value="new">Newest</option>{% if user %}<option value="score">Best match</option>{% endif %}<option value="pay">Highest pay</option></select>
 </div>
 
-{% if rows %}
-<ul class="jobs card" id="jobs">
-{% for r in rows %}
-{% set pay = r.requirements.get("pay_hourly") %}
-<li class="job" data-uids="{{ r.uids|join(' ') }}" data-seen="{{ r.fresh_at }}" data-score="{{ r.score }}" data-pay="{{ pay[1] if pay else 0 }}"
-    data-roles="{{ r.roles|join(' ') }}" data-terms="{% for s, y in r.requirements.get('terms', []) %}{{ s or '' }}-{{ y }} {% endfor %}"
-    data-text="{{ (r.company ~ ' ' ~ r.title ~ ' ' ~ r.locations|join(' ') ~ ' ' ~ (r.team or ''))|lower }}">
-  <div class="logo" style="--h:{{ (r.company|sum_ord) % 360 }}">{{ r.company[0]|upper }}</div>
-  <div>
-    <div class="company">{{ r.company }}{% if r.is_new %}<span class="badge-new">NEW</span>{% endif %}</div>
-    <a class="title" href="{{ r.apply_url }}" target="_blank" rel="noopener">{{ r.title }}</a>
-    {% if r.variants|length > 1 %}
-    <div class="meta">{% for v in r.variants %}<a class="loc" href="{{ v.apply_url }}" target="_blank" rel="noopener">{{ v.locations[0] if v.locations else "Location " ~ loop.index }}</a>{% if not loop.last %} · {% endif %}{% endfor %}{% if r.remote in ("remote", "hybrid") %} · {{ r.remote|title }}{% endif %}</div>
-    {% else %}
-    <div class="meta">{{ r.locations[:3]|join(" · ") or "Location not listed" }}{% if r.locations|length > 3 %} +{{ r.locations|length - 3 }}{% endif %}{% if r.remote in ("remote", "hybrid") %} · {{ r.remote|title }}{% endif %}</div>
-    {% endif %}
-    {% if r.chips %}<div class="chips">{% for c in r.chips %}<span class="chip{% if c.startswith('$') %} money{% endif %}">{{ c }}</span>{% endfor %}</div>{% endif %}
-    {% if user and r.checks %}
-    <details class="why"><summary>{% if r.passes %}Why it fits you{% else %}Why it's not a match{% endif %} <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3.5l3 3 3-3" stroke="currentColor" fill="none" stroke-width="1.5"/></svg></summary>
-      <ul>{% for x in r.checks %}<li class="{% if x.startswith('✓') %}ok{% elif x.startswith('⚠') %}warn{% else %}fail{% endif %}">{{ x.replace('filtered: ', '✕ ') }}</li>{% endfor %}</ul>
-    </details>
-    {% endif %}
-  </div>
-  <div class="side">
-    {% set a = r.fresh_at|age %}<span class="age{% if (a.endswith('m') and not a.endswith('mo')) or a == 'now' or a.endswith('h') %} fresh{% endif %}" title="Posted {{ r.fresh_at[:10] }}">{{ a }}</span>
-    {% if user %}
-    <div class="acts">
-      <button class="ico{% if r.status == 'interested' %} on{% endif %}" data-s="interested" title="Save" aria-label="Save"><svg viewBox="0 0 16 16"><path d="M4 2h8v12l-4-3-4 3z" fill="currentColor"/></svg></button>
-      <button class="ico{% if r.status == 'applied' %} on{% endif %}" data-s="applied" title="Mark applied" aria-label="Mark applied"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>
-      <button class="ico{% if r.status == 'skipped' %} on{% endif %}" data-s="skipped" title="Hide" aria-label="Hide"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2"/></svg></button>
-    </div>
-    {% endif %}
-    <a class="btn small ghost" href="{{ r.apply_url }}" target="_blank" rel="noopener">Apply</a>
-  </div>
-</li>
-{% endfor %}
+<ul class="jobs card" id="jobs"{% if not rows %} style="display:none"{% endif %}>
+{% include "_rows.html" %}
 </ul>
+<div class="more" id="more"{% if not next_offset %} style="display:none"{% endif %}><button class="btn ghost" type="button" id="moreBtn">Show more</button> <span class="muted small" id="shown"></span></div>
 <div class="empty card" id="none" style="display:none"><b>No internships match that search</b>Try a different word or clear a filter.</div>
-{% else %}
-<div class="empty card">
+{% if not rows %}
+<div class="empty card" id="emptyTab">
   {% if tab == "foryou" %}<b>No matches yet</b>Nothing open right now fits your profile. We'll email you the moment one does. <a href="/settings">Adjust your profile</a>
   {% elif tab == "saved" %}<b>Nothing saved</b>Tap the bookmark on any internship to keep it here.
   {% elif tab == "applied" %}<b>No applications tracked</b>Tap the check mark after you apply.
@@ -146,36 +113,35 @@
 
 <script>
 (() => {
-  const list = document.getElementById("jobs");
-  if (!list) return;
-  const rows = [...list.children];
+  const list = document.getElementById("jobs"), more = document.getElementById("more"),
+        moreBtn = document.getElementById("moreBtn"), none = document.getElementById("none"),
+        emptyTab = document.getElementById("emptyTab");
   const q = document.getElementById("q"), term = document.getElementById("term"),
-        role = document.getElementById("role"), sort = document.getElementById("sort"),
-        none = document.getElementById("none");
-  // "summer-2027" matches postings tagged summer-2027, or tagged only with the year ("-2027")
-  const termMatch = (terms, t) => { const toks = terms.split(" "); return toks.includes(t) || toks.includes("-" + t.split("-")[1]); };
-  function apply() {
-    const words = q.value.toLowerCase().split(/\s+/).filter(Boolean);
-    let shown = 0;
-    for (const r of rows) {
-      const ok = words.every(w => r.dataset.text.includes(w))
-        && (!term.value || termMatch(r.dataset.terms, term.value))
-        && (!role.value || r.dataset.roles.split(" ").includes(role.value));
-      r.classList.toggle("hidden-row", !ok);
-      shown += ok;
-    }
-    none.style.display = shown ? "none" : "block";
-    list.style.display = shown ? "" : "none";
+        role = document.getElementById("role"), sort = document.getElementById("sort");
+  const state = {tab: {{ tab|tojson }}, since: {{ since|tojson }}, next: {{ (next_offset or "")|tojson }}};
+  let seq = 0, timer;
+  function params(offset) {
+    return new URLSearchParams({tab: state.tab, q: q.value, term: term.value, role: role.value,
+                                sort: sort.value, offset, since: state.since});
   }
-  function order() {
-    const key = sort.value;
-    const val = r => key === "new" ? r.dataset.seen : parseFloat(r.dataset[key] || 0);
-    rows.sort((a, b) => val(a) < val(b) ? 1 : val(a) > val(b) ? -1 : 0);
-    rows.forEach(r => list.appendChild(r));
+  async function load(offset, append) {
+    const mine = ++seq;
+    const res = await fetch("/rows?" + params(offset));
+    if (!res.ok || mine !== seq) return;
+    const html = await res.text();
+    if (append) list.insertAdjacentHTML("beforeend", html); else list.innerHTML = html;
+    state.next = res.headers.get("X-Next-Offset");
+    const total = +res.headers.get("X-Total");
+    const any = list.children.length > 0;
+    list.style.display = any ? "" : "none";
+    if (emptyTab) emptyTab.style.display = "none";
+    none.style.display = any ? "none" : "block";
+    more.style.display = state.next ? "" : "none";
   }
-  q.addEventListener("input", apply);
-  [term, role].forEach(el => el.addEventListener("change", apply));
-  sort.addEventListener("change", order);
+  const reload = () => { clearTimeout(timer); timer = setTimeout(() => load(0, false), 180); };
+  q.addEventListener("input", reload);
+  [term, role, sort].forEach(el => el.addEventListener("change", () => load(0, false)));
+  moreBtn.addEventListener("click", () => state.next && load(state.next, true));
   list.addEventListener("click", async e => {
     const btn = e.target.closest(".ico");
     if (!btn) return;

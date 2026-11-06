@@ -3,7 +3,8 @@
 A free website that emails you new tech internships the minute they're posted, filtered to the
 ones you're actually eligible for.
 
-* **Checked every minute.** ~200 companies' public job boards (Ashby, Greenhouse, Lever).
+* **Checked every minute.** Thousands of companies' job boards on Ashby, Greenhouse, Lever and
+  Workday, found automatically (see [Finding companies](#finding-companies)).
 * **Matched to you.** Each posting's stated requirements (graduation window, degree, major, GPA,
   US citizen / no sponsorship, clearance, term, pay) are extracted and checked against your
   profile, with the posting's own wording shown for every check.
@@ -11,8 +12,8 @@ ones you're actually eligible for.
 * **Anyone can sign up.** Email sign-in (link or 6-digit code), no passwords. Each person gets their
   own profile, "For you" list, saved/applied tracking and email preferences.
 
-It never scrapes LinkedIn, Indeed or company career sites. Companies without a public board on
-those three ATSs are listed as unsupported on `/companies`.
+It never scrapes LinkedIn, Indeed or company career sites. Companies on other systems (iCIMS,
+SmartRecruiters, custom sites) are listed as unsupported on `/companies`.
 
 ## How it works
 
@@ -64,6 +65,7 @@ Keep polling with cron (`* * * * * cd /path && uv run radar poll`) or `uv run ra
 | `radar worker` | Poll forever on `poll.interval_minutes` |
 | `radar serve [--port 8000]` | Web app |
 | `radar discover <careers-url or name> [--add --name N --tags …]` | Find and validate a company's ATS board |
+| `radar discover-all [--sources simplify commoncrawl]` | Find companies on every ATS, validate, write `discovered.yaml` |
 | `radar validate` | Fetch every registry board and report broken ones |
 | `radar report [--markdown]` | Coverage report |
 | `radar reanalyze` | Re-run detection/extraction on stored postings (after changing the code) |
@@ -104,7 +106,48 @@ With neither email option set, mail is printed to the console (development only)
 Unanswered questions are skipped, and a requirement a posting doesn't state never hides it.
 Equal-opportunity boilerplate (which mentions citizenship, veterans, disability) is ignored.
 
-## Adding companies
+## Finding companies
+
+No ATS publishes a list of its customers, so `radar discover-all` builds one from public sources:
+
+1. **Simplify's public internship and new-grad lists** on GitHub: every apply link points at a
+   company's board.
+2. **Common Crawl's URL index** ([index.commoncrawl.org](https://index.commoncrawl.org)): every page
+   it has crawled on `jobs.ashbyhq.com`, `boards.greenhouse.io`, `job-boards.greenhouse.io`,
+   `jobs.lever.co` and `*.myworkdayjobs.com`, reduced to board slugs.
+
+Each candidate is then checked live: the board must exist and have open jobs. The company name
+comes from the board itself (Greenhouse's board name, Ashby/Lever page title, Workday's site
+title), and one board is kept per company (the one with more internships). The result goes to
+`discovered.yaml` (generated, don't edit). `registry.yaml` stays the hand-curated list with tags,
+and wins whenever both have the same company. Re-run weekly:
+
+```sh
+uv run radar discover-all            # all sources (~20-40 min, rate limited)
+uv run radar discover-all --sources simplify --limit 200   # quick partial run
+```
+
+**Polling tiers** keep this polite at scale: curated boards and any board with an internship in
+the last 180 days are checked every minute; boards with jobs but no recent internships every 15
+minutes (so a company's first internship is still caught quickly); empty boards hourly. A run that
+hits its 50-second budget leaves the remaining boards for the next minute, most overdue first.
+
+### Workday
+
+Workday has no official posting API. Its career sites are rendered from an unauthenticated JSON
+endpoint (`/wday/cxs/{tenant}/{site}/jobs`) that the page itself calls, and that's what Radar
+reads. To keep that light:
+
+* only career sites the tenant's `robots.txt` allows (sites it disallows are skipped);
+* one shared rate limit for all of Workday (~6 requests/second total);
+* each company's "Job Type = Intern" filter is detected automatically, and each minute Radar
+  fetches just the first page of that filter (newest first). It pages through the intern list only
+  when something changed, or every 30 minutes to catch closures; descriptions are fetched once per
+  posting.
+
+Steady state is one request per company per minute (NVIDIA: 1 request, under a second).
+
+## Adding companies by hand
 
 ```sh
 uv run radar discover https://www.notion.com/careers --add --name Notion --tags product
@@ -138,6 +181,8 @@ disk for SQLite shared by both.
 src/internship_radar/
   models.py        Company, Posting, Match, Alert
   ats.py           endpoint URLs + Ashby/Greenhouse/Lever parsers
+  workday.py       Workday career sites (intern facet, incremental sync)
+  bulk_discover.py find companies on every ATS (Simplify lists + Common Crawl), validate live
   fetch.py         polite HTTP (ETag, per-host limit, backoff)
   discover.py      careers URL / name -> validated board
   filters.py       internship detection, roles, analyze() (per posting) + score() (per user)
@@ -148,6 +193,7 @@ src/internship_radar/
   mailer.py        Resend / SMTP / console
   users.py         per-user config
   web.py           FastAPI app + templates/
-registry.yaml      companies
+registry.yaml      curated companies (with tags); wins over discovered.yaml
+discovered.yaml    generated by `radar discover-all`
 config.yaml        site defaults and polling
 ```

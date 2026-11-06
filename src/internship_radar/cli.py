@@ -8,7 +8,7 @@ import json
 import sys
 
 from . import db
-from .config import load_registry, load_settings, save_registry
+from .config import load_companies, load_registry, load_settings, save_registry
 from .discover import discover_name, discover_url
 from .fetch import Fetcher
 from .filters import analyze
@@ -80,7 +80,8 @@ def cmd_validate(args, settings) -> int:
     """Fetch every registry board once and report which are broken."""
     from .discover import Candidate, validate
 
-    companies = [c for c in load_registry(settings.registry_path) if c.ats is not ATS.UNSUPPORTED]
+    companies = [c for c in load_companies(settings) if c.ats is not ATS.UNSUPPORTED
+                 and c.ats is not ATS.WORKDAY]
 
     async def run():
         f = Fetcher(retries=1)
@@ -135,6 +136,16 @@ def cmd_test_email(args, settings) -> int:
     return 0
 
 
+def cmd_discover_all(args, settings) -> int:
+    from .bulk_discover import run
+
+    report = asyncio.run(run(settings, args.sources, crawls=args.crawls, max_pages=args.max_pages,
+                             limit=args.limit))
+    print(json.dumps(report, indent=2))
+    print(f"wrote {settings.discovered_path}")
+    return 0
+
+
 def cmd_users(args, settings) -> int:
     conn = db.connect(settings.db_path)
     rows = conn.execute("""SELECT u.id, u.created_at, u.last_login_at, u.instant_alerts, u.nightly_digest,
@@ -175,6 +186,15 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--name", help="company name (with --add)")
     s.add_argument("--tags", nargs="*")
     s.set_defaults(fn=cmd_discover)
+
+    s = sub.add_parser("discover-all", help="find companies on each ATS from public sources, validate, "
+                                           "write discovered.yaml")
+    s.add_argument("--sources", nargs="+", default=["simplify", "commoncrawl"],
+                   choices=["simplify", "commoncrawl"])
+    s.add_argument("--crawls", type=int, default=2, help="how many recent Common Crawl indexes")
+    s.add_argument("--max-pages", type=int, default=30, help="index pages per host per crawl")
+    s.add_argument("--limit", type=int, help="validate at most N candidates (testing)")
+    s.set_defaults(fn=cmd_discover_all)
 
     s = sub.add_parser("validate", help="check every board in the registry")
     s.set_defaults(fn=cmd_validate)

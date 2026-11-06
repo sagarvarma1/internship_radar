@@ -5,12 +5,12 @@ from __future__ import annotations
 from collections import Counter
 
 from . import db
-from .config import Settings, load_registry
+from .config import Settings, load_companies
 from .models import ATS
 
 
 def coverage_data(settings: Settings) -> dict:
-    companies = load_registry(settings.registry_path)
+    companies = load_companies(settings)
     conn = db.connect(settings.db_path)
     db.sync_registry(conn, companies)
     states = {r["key"]: r for r in conn.execute("SELECT * FROM companies WHERE active=1")}

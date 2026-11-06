@@ -42,6 +42,7 @@ def conn(tmp_path):
 def settings(tmp_path):
     return Settings(filters=FilterConfig(), alerts=AlertConfig(batch_threshold=3), poll=PollConfig(),
                     db_path=tmp_path / "t.db", registry_path=Path("registry.yaml"),
+                    discovered_path=tmp_path / "discovered.yaml",
                     site_url="https://radar.example", secure_cookies=True)
 
 

@@ -1,0 +1,32 @@
+{
+  "seconds": 4941,
+  "by_ats": {
+    "lever": {
+      "candidates": 391,
+      "live": 322,
+      "kept": 315,
+      "with_internships": 91
+    },
+    "workday": {
+      "candidates": 3080,
+      "live": 1683,
+      "kept": 1070,
+      "with_internships": 654
+    },
+    "greenhouse": {
+      "candidates": 4680,
+      "live": 3251,
+      "kept": 3119,
+      "with_internships": 500
+    },
+    "ashby": {
+      "candidates": 1579,
+      "live": 1424,
+      "kept": 1325,
+      "with_internships": 243
+    }
+  },
+  "kept": 5829,
+  "with_internships": 1488,
+  "workday_blocked_by_robots": 0
+}
