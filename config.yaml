@@ -18,7 +18,7 @@ alerts:
 
 poll:
   interval_minutes: 1
-  concurrency: 24
+  concurrency: 32
   per_host_interval_seconds: 0.2
   max_backoff_hours: 6
-  deadline_seconds: 50
+  deadline_seconds: 45

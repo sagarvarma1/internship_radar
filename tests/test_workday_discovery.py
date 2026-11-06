@@ -149,7 +149,7 @@ def test_workday_full_sync_every_30_minutes(conn):
     fake = FakeWorkday([job(i) for i in range(3)])
     run(workday.poll(conn, fake, NV))
     meta = json.loads(conn.execute("SELECT meta FROM companies").fetchone()[0])
-    meta["full_at"] = (datetime.now(UTC) - timedelta(minutes=31)).isoformat()
+    meta["full_at"] = (datetime.now(UTC) - timedelta(minutes=37)).isoformat()
     conn.execute("UPDATE companies SET meta=?", (json.dumps(meta),))
     assert run(workday.poll(conn, fake, NV))["status"] == "ok"  # reconciled, not "not modified"
 
@@ -254,3 +254,94 @@ def test_robots_rules(monkeypatch):
             return FetchResult(200, "User-agent: *\nAllow: /External/\nDisallow: /Research/\n")
     assert run(bd.robots_allows(F(), "x.wd1.myworkdayjobs.com", "External"))
     assert not run(bd.robots_allows(F(), "x.wd1.myworkdayjobs.com", "Research"))
+
+
+def test_host_groups_rate_limit_workday_per_cluster():
+    from internship_radar.fetch import group_interval, host_group
+    assert host_group("nvidia.wd5.myworkdayjobs.com") == "wd5.myworkdayjobs.com"
+    assert host_group("adobe.wd5.myworkdayjobs.com") == "wd5.myworkdayjobs.com"
+    assert host_group("acme.wd1.myworkdayjobs.com") == "wd1.myworkdayjobs.com"
+    assert host_group("boards-api.greenhouse.io") == "boards-api.greenhouse.io"
+    assert host_group("api.lever.co") == "api.lever.co"
+    assert group_interval("wd5.myworkdayjobs.com", 0.2) == 0.1
+    assert group_interval("api.lever.co", 0.2) == 0.2
+
+
+@pytest.mark.parametrize("label,ok", [
+    ("Intern (Fixed Term)", True), ("Internship", True), ("Intern/Co-op", True),
+    ("Student (Fixed Term)", True), ("Apprentice", True), ("Early Careers", True),
+    ("Internal Audit Quality Assurance", False), ("International", False),
+    ("Student Services", False), ("University of Arkansas for Medical Sciences", False),
+    ("IT, Telecom & Internet", False),
+])
+def test_intern_facet_words(label, ok):
+    assert workday.is_intern_facet(label) is ok
+
+
+def test_large_backlog_is_stored_in_chunks_and_stays_baseline(conn, monkeypatch):
+    monkeypatch.setattr(workday, "MAX_DETAILS_PER_POLL", 10)
+    fake = FakeWorkday([job(i) for i in range(25)])
+    r = run(workday.poll(conn, fake, NV))
+    assert r["new"] == 10 and r["closed"] == 0
+    assert conn.execute("SELECT baselined FROM companies").fetchone()[0] == 0  # still baselining
+    run(workday.poll(conn, fake, NV))
+    r = run(workday.poll(conn, fake, NV))
+    assert r["new"] == 5
+    assert conn.execute("SELECT COUNT(*) FROM postings").fetchone()[0] == 25
+    assert conn.execute("SELECT SUM(notify_pending) FROM postings").fetchone()[0] == 0  # no emails
+    assert conn.execute("SELECT baselined FROM companies").fetchone()[0] == 1
+    fake.calls.clear()
+    assert run(workday.poll(conn, fake, NV))["status"] == "not modified"
+
+
+def test_wrong_facet_is_relearned_as_new_baseline(conn):
+    fake = FakeWorkday([job(i) for i in range(3)])
+    run(workday.poll(conn, fake, NV))
+    bad = {"facet": {"param": "jobFamilyGroup", "id": "x", "label": "Internal Audit", "count": 9}}
+    conn.execute("UPDATE companies SET meta=?", (json.dumps(bad),))
+    conn.execute("DELETE FROM postings")
+    r = run(workday.poll(conn, fake, NV))
+    assert r["baseline"] and r["new"] == 3 and r["new_internships"] == 0
+
+
+def test_location_facets_are_never_the_intern_facet():
+    facets = [{"facetParameter": "remoteType", "values": [
+                  {"descriptor": "On Campus/Onsite", "id": "a", "count": 559}]},
+              {"facetParameter": "jobFamilyGroup", "values": [
+                  {"descriptor": "Campus Recruiting", "id": "b", "count": 4}]}]
+    assert workday.pick_intern_facet(facets)["id"] == "b"
+    assert workday.pick_intern_facet(facets[:1]) is None
+
+
+def test_truncated_listing_never_closes_postings(conn, monkeypatch):
+    fake = FakeWorkday([job(i) for i in range(25)])
+    run(workday.poll(conn, fake, NV))
+    assert conn.execute("SELECT COUNT(*) FROM postings WHERE closed_at IS NULL").fetchone()[0] == 25
+    monkeypatch.setattr(workday, "MAX_PAGES", 1)  # listing now longer than we'll read
+    fake.jobs.insert(0, job(99))
+    r = run(workday.poll(conn, fake, NV))
+    assert r["new"] == 1 and r["closed"] == 0  # the 6 past page 1 weren't seen, but aren't closed
+
+
+def test_backlog_of_slow_tier_never_starves_minute_boards(tmp_path):
+    from internship_radar.poller import overdue
+    s = settings(tmp_path)
+    now = datetime(2026, 11, 5, 12, tzinfo=UTC)
+    common = {"baselined": 1, "last_internship_at": None, "open_postings": 10,
+              "consecutive_failures": 0, "last_error_at": None}
+    minute = {**common, "key": "ashby:a", "source": "curated", "open_internships": 2,
+              "last_polled_at": (now - timedelta(minutes=2)).isoformat()}
+    slow = {**common, "key": "greenhouse:b", "source": "discovered", "open_internships": 0,
+            "last_polled_at": (now - timedelta(minutes=20)).isoformat()}
+    assert overdue(minute, s, now) > overdue(slow, s, now) > 0
+
+
+def test_slow_tiers_are_spread_per_board(tmp_path):
+    from internship_radar.poller import _interval
+    s = settings(tmp_path)
+    now = datetime(2026, 11, 5, tzinfo=UTC)
+    base = {"source": "discovered", "baselined": 1, "open_internships": 0, "last_internship_at": None,
+            "open_postings": 10}
+    spans = {_interval({**base, "key": f"greenhouse:{i}"}, s, now) for i in range(20)}
+    assert len(spans) > 10 and all(timedelta(minutes=12) < x < timedelta(minutes=18) for x in spans)
+    assert _interval({**base, "key": "x", "open_internships": 1}, s, now) == timedelta(minutes=1)

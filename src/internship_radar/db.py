@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import secrets
 import sqlite3
 from collections.abc import Iterable
@@ -187,6 +188,12 @@ def sync_registry(conn: sqlite3.Connection, companies: Iterable[Company]) -> Non
         )
     placeholders = ",".join("?" * len(keys)) or "''"
     conn.execute(f"UPDATE companies SET active=0 WHERE key NOT IN ({placeholders})", keys)
+    # A board no longer watched (slug moved, company dropped from discovery) can't confirm its
+    # postings are still open, so close them; they reopen, without alerts, if it comes back.
+    conn.execute(
+        """UPDATE postings SET closed_at=?, notify_pending=0 WHERE closed_at IS NULL AND company_key IN
+             (SELECT key FROM companies WHERE active=0)""", (now(),))
+    conn.execute("UPDATE companies SET open_postings=0, open_internships=0 WHERE active=0")
     conn.execute("COMMIT")
 
 
@@ -217,11 +224,24 @@ def record_not_modified(conn: sqlite3.Connection, key: str) -> None:
 # ---------------------------------------------------------------- postings
 
 
+# Descriptions are only needed to extract requirements (internships) or, for a title that
+# mentions students/universities, to detect an internship from its description. Everything else
+# is stored without one: it's ~90% of postings and ~1 GB at 6,000 boards.
+KEEP_DESCRIPTION_TITLE = re.compile(r"\b(students?|university|universit\w+|campus|graduate)\b", re.I)
+
+
+def stored_description(p: Posting, a) -> str:
+    return p.description if a.is_internship or KEEP_DESCRIPTION_TITLE.search(p.title or "") else ""
+
+
 def apply_snapshot(conn: sqlite3.Connection, company_key: str, etag: str | None,
-                   postings: list[tuple[Posting, "object"]], full: bool = True) -> dict:
+                   postings: list[tuple[Posting, "object"]], full: bool = True,
+                   complete: bool = True) -> dict:
     """Store a board snapshot of (posting, Analysis) pairs. New internships get notify_pending=1
     unless this is the board's baseline (first) snapshot. full=False (a partial listing, e.g.
-    Workday's newest page) only adds/updates: nothing missing from it is marked closed."""
+    Workday's newest page) only adds/updates: nothing missing from it is marked closed.
+    complete=False means more of this listing is still to come (a large Workday board stored in
+    chunks): if this is the baseline, the board stays un-baselined so the next chunk is too."""
     t = now()
     state = get_company_state(conn, company_key)
     baseline = not (state and state["baselined"])
@@ -238,7 +258,7 @@ def apply_snapshot(conn: sqlite3.Connection, company_key: str, etag: str | None,
             values = (
                 p.title, p.team, p.department, json.dumps(p.locations), json.dumps(p.countries),
                 str(p.remote), p.employment_type,
-                p.posted_at.isoformat() if p.posted_at else None, p.apply_url, p.description,
+                p.posted_at.isoformat() if p.posted_at else None, p.apply_url, stored_description(p, a),
                 int(a.is_internship), a.intern_reason, json.dumps(a.roles),
                 json.dumps(a.requirements.to_json()), json.dumps(a.chips),
             )
@@ -279,11 +299,12 @@ def apply_snapshot(conn: sqlite3.Connection, company_key: str, etag: str | None,
             (company_key,),
         ).fetchone()
         conn.execute(
-            """UPDATE companies SET etag=?, baselined=1, last_polled_at=?, last_success_at=?,
+            """UPDATE companies SET etag=?, baselined=MAX(baselined, ?), last_polled_at=?,
+                 last_success_at=?,
                  consecutive_failures=0, open_postings=?, open_internships=?,
                  last_internship_at=COALESCE((SELECT MAX(first_seen_at) FROM postings
                    WHERE company_key=? AND is_internship=1), last_internship_at) WHERE key=?""",
-            (etag, t, t, counts["n"], counts["i"], company_key, company_key),
+            (etag, int(complete), t, t, counts["n"], counts["i"], company_key, company_key),
         )
         conn.execute("COMMIT")
     except Exception:
@@ -456,8 +477,18 @@ def delete_user(conn: sqlite3.Connection, user_id: int) -> None:
         conn.execute("DELETE FROM login_tokens WHERE email=?", (email["email"],))
 
 
+CLOSED_JOB_TTL = timedelta(days=7)          # closed non-internships: nothing refers to them
+CLOSED_INTERNSHIP_TTL = timedelta(days=180)  # unless someone saved/applied to it
+
+
 def cleanup(conn: sqlite3.Connection) -> None:
     t = now()
+    ago = lambda d: (datetime.now(UTC) - d).isoformat(timespec="seconds")
+    conn.execute("DELETE FROM postings WHERE closed_at<? AND is_internship=0", (ago(CLOSED_JOB_TTL),))
+    conn.execute(
+        """DELETE FROM postings WHERE closed_at<? AND is_internship=1
+             AND uid NOT IN (SELECT uid FROM user_postings) AND uid NOT IN (SELECT uid FROM user_alerts)""",
+        (ago(CLOSED_INTERNSHIP_TTL),))
     conn.execute("DELETE FROM sessions WHERE expires_at<?", (t,))
     conn.execute("DELETE FROM login_tokens WHERE expires_at<?",
                  ((datetime.now(UTC) - timedelta(days=2)).isoformat(timespec="seconds"),))

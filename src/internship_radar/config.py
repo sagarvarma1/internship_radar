@@ -31,7 +31,7 @@ class PollConfig:
     concurrency: int = 12
     per_host_interval_seconds: float = 0.2  # ~5 req/s per ATS API host; most answers are 304s
     max_backoff_hours: float = 6.0
-    deadline_seconds: float = 50  # stop starting new boards after this; the rest go first next run
+    deadline_seconds: float = 45  # stop starting new boards after this; the rest go first next run
 
 
 @dataclass

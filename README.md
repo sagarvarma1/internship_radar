@@ -3,8 +3,9 @@
 A free website that emails you new tech internships the minute they're posted, filtered to the
 ones you're actually eligible for.
 
-* **Checked every minute.** Thousands of companies' job boards on Ashby, Greenhouse, Lever and
-  Workday, found automatically (see [Finding companies](#finding-companies)).
+* **About 6,000 companies watched**, on Ashby, Greenhouse, Lever and Workday, found automatically
+  (see [Finding companies](#finding-companies)). The ~1,700 with internships open, plus the curated
+  list, are checked every minute; the rest every 15 minutes.
 * **Matched to you.** Each posting's stated requirements (graduation window, degree, major, GPA,
   US citizen / no sponsorship, clearance, term, pay) are extracted and checked against your
   profile, with the posting's own wording shown for every check.
@@ -19,7 +20,7 @@ SmartRecruiters, custom sites) are listed as unsupported on `/companies`.
 
 ```
 cron, every minute ─► radar poll
-    192 boards ─► ATS APIs (ETag → mostly 304s, ~3 req/s per host, backoff)
+    boards that are due ─► ATS APIs (ETag → mostly 304s, per-API rate limits, backoff)
          │
          ▼
     analyze each posting once: internship? roles? stated requirements?   (stored)
@@ -35,8 +36,9 @@ web app ─► "For you" (scored per request in ms from the stored analysis), Al
 ```
 
 * The first poll of a board is a baseline: everything is stored, nothing is emailed.
-* A poll of all 192 boards takes ~35 s (42 s on a cold start), so it fits the one-minute cron;
-  a run never overlaps a previous one.
+* A run polls every board that's due (typically 500-1,700 of them) in 25-50 s. It stops starting
+  new boards at 45 s and cancels anything still running at 49 s, so it always fits the one-minute
+  cron, and it never overlaps a previous run. Anything it didn't reach goes first next run.
 * New users only get emails for postings that appear after they sign up; everything already open
   is on the site.
 
@@ -47,9 +49,9 @@ Requires Python 3.12 and [uv](https://docs.astral.sh/uv/).
 ```sh
 git clone https://github.com/sagarvarma1/internship_radar && cd internship_radar
 uv sync
-uv run radar poll            # first run: baseline of every board (~45 s)
+uv run radar poll            # first run: starts the baseline (run it repeatedly; see below)
 uv run radar serve           # http://localhost:8000
-uv run pytest                # 150 tests, offline
+uv run pytest                # 206 tests, offline
 ```
 
 Without email credentials the site uses a **console mailer**: sign-in links/codes and alerts are
@@ -127,10 +129,23 @@ uv run radar discover-all            # all sources (~20-40 min, rate limited)
 uv run radar discover-all --sources simplify --limit 200   # quick partial run
 ```
 
-**Polling tiers** keep this polite at scale: curated boards and any board with an internship in
-the last 180 days are checked every minute; boards with jobs but no recent internships every 15
-minutes (so a company's first internship is still caught quickly); empty boards hourly. A run that
-hits its 50-second budget leaves the remaining boards for the next minute, most overdue first.
+**Polling tiers** keep this polite at scale:
+
+| Tier | Interval | Boards (Nov 2026) |
+| --- | --- | --- |
+| Curated (`registry.yaml`) or an internship open now | every minute | ~1,690 |
+| An internship in the last 180 days | every 5 minutes | few |
+| Jobs, but no recent internships | every 15 minutes (±15% per board) | ~3,950 |
+| No open jobs | hourly (±15%) | ~380 |
+
+Each run is ordered by how late each board is relative to its own interval, so a backlog of
+15-minute boards never delays the every-minute ones. Each API has its own pool of concurrent
+requests, so slow Workday calls don't hold up Greenhouse/Ashby, plus a rate limit per API host
+(Greenhouse ~12/s, Ashby ~10/s, Lever 5/s, each Workday cluster ≤10/s).
+
+A fresh database takes about 75 runs (~75 minutes of the cron) to baseline all ~6,000 boards,
+mostly fetching Workday descriptions, at most 40 per board per run. Nothing is emailed for
+baseline postings.
 
 ### Workday
 
@@ -139,11 +154,16 @@ endpoint (`/wday/cxs/{tenant}/{site}/jobs`) that the page itself calls, and that
 reads. To keep that light:
 
 * only career sites the tenant's `robots.txt` allows (sites it disallows are skipped);
-* one shared rate limit for all of Workday (~6 requests/second total);
-* each company's "Job Type = Intern" filter is detected automatically, and each minute Radar
-  fetches just the first page of that filter (newest first). It pages through the intern list only
-  when something changed, or every 30 minutes to catch closures; descriptions are fetched once per
-  posting.
+* one rate limit per Workday cluster (`wd1`, `wd5`, ...: ≤10 requests/second each, shared by
+  every tenant on it);
+* each company's "Job Type = Intern" filter (e.g. `workerSubType = Intern (Fixed Term)`) is
+  detected automatically. Location/remote filters and look-alikes ("Internal Audit",
+  "International", "Student Services") are rejected. Each minute Radar fetches just the first page
+  of that filter (newest first). It pages through the intern list only when something changed,
+  or every 30 minutes to catch closures. Descriptions are fetched once per posting;
+* companies with no such filter (about half) are searched for "intern" every 3 hours, titles
+  filtered, and their newest jobs page checked every minute;
+* a listing too long to read in full (over 800 jobs) is never used to close postings.
 
 Steady state is one request per company per minute (NVIDIA: 1 request, under a second).
 

@@ -30,20 +30,32 @@ class FetchResult:
         return self.status in (200, 304)
 
 
-# Hosts that share infrastructure get one shared budget: every *.myworkdayjobs.com tenant is
-# Workday's, so they're rate limited together rather than per tenant.
+# Hosts that share infrastructure get one shared budget rather than one per tenant. Workday
+# tenants live on numbered clusters (acme.wd5.myworkdayjobs.com), so each cluster is one group.
 HOST_GROUPS = {
-    "myworkdayjobs.com": 0.1,           # ~10 requests/second across all of Workday's tenants
+    "myworkdayjobs.com": 0.1,           # per cluster: at most 10 requests/second to e.g. wd5
     "api.ashbyhq.com": 0.1,             # served from Cloudflare's cache (max-age=60)
     "boards-api.greenhouse.io": 0.08,   # ETag 304s for unchanged boards
 }
 
 
 def host_group(host: str) -> str:
+    """The rate-limit bucket for a host: 'wd5.myworkdayjobs.com' for any tenant on Workday's wd5
+    cluster, the API host for Ashby/Greenhouse, otherwise the host itself."""
     for suffix in HOST_GROUPS:
         if host == suffix or host.endswith("." + suffix):
+            if suffix == "myworkdayjobs.com":
+                labels = host.split(".")
+                return ".".join(labels[-3:]) if len(labels) >= 3 else suffix
             return suffix
     return host
+
+
+def group_interval(group: str, default: float) -> float:
+    for suffix, interval in HOST_GROUPS.items():
+        if group == suffix or group.endswith("." + suffix):
+            return interval
+    return default
 
 
 class HostLimiter:
@@ -56,7 +68,7 @@ class HostLimiter:
 
     async def wait(self, host: str) -> None:
         host = host_group(host)
-        interval = HOST_GROUPS.get(host, self.min_interval)
+        interval = group_interval(host, self.min_interval)
         lock = self._locks.setdefault(host, asyncio.Lock())
         async with lock:
             now = time.monotonic()
@@ -77,6 +89,7 @@ class Fetcher:
         self.client = client or httpx.AsyncClient(
             headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
             timeout=httpx.Timeout(30.0, connect=10.0),
+            limits=httpx.Limits(max_connections=200, max_keepalive_connections=100),
             follow_redirects=True,
             http2=False,
         )

@@ -102,7 +102,9 @@ def _links(text: str, source: str) -> dict[tuple, Found]:
 JUNK_TITLE = re.compile(
     r"(?i)\b(early careers?|university|students?|interns?(hip)?s?|contractors?|agency|preferential|"
     r"external|internal|search|site|portal|opportunit|talent|recruit|requisition|applicants?|"
-    r"workday|welcome|home|current openings|job board)\b")
+    r"workday|welcome|home|current openings|job board|join|apply|applying|openings?|job market|current|"
+    r"job opportunities|career hub|careers page|"
+    r"open positions|positions|vacanc\w*|hiring|envisioning)\b")
 
 
 SITE_NOISE = re.compile(
@@ -148,13 +150,17 @@ def clean_name(raw: str | None, fallback: str) -> str:
     """'Five Rings LLC - Careers' -> 'Five Rings LLC'; 'CAREERS AT NVIDIA' -> 'NVIDIA'."""
     s = unescape(unquote((raw or "").strip()))
     s = re.sub(r"(?i)^\s*(careers|jobs|job openings|work|opportunities)\s+(at|with)\s+", "", s)
-    s = re.sub(r"(?i)^(careers|jobs)\s*@\s*", "", s)
+    s = re.sub(r"(?i)^(careers?|jobs)\s*@\s*", "", s)
     s = re.sub(r"(?i)\s*[-|–—:]\s*(careers?|jobs?|job board|current openings|open positions).*$", "", s)
-    s = re.sub(r"(?i)\s+(careers?|jobs?)$", "", s).strip(" -|")
+    s = re.sub(r"(?i)\s+(careers?( page| hub| opportunities)?|jobs?|job openings|openings)$", "", s).strip(" -|")
     if GENERIC_TITLE.match(s):
         s = ""
     if not s or len(s) > 60 or s.lower() in ("workday", "careers", "jobs") or JUNK_TITLE.search(s):
-        s = re.sub(r"[-_.%]+|20(?=[A-Z])", " ", unquote(fallback).split("/")[0].split(".")[0]).strip()
+        base = unquote(fallback).split("/")[0].split(".")[0]
+        # Workday tenants like "mrapplecareers", "internaljobsatlush", "msfcareers"
+        base = re.sub(r"(?i)^(internaljobsat|jobsat|careersat)|(internal)?(careers?|jobs|employeeopenings|openings)$",
+                      "", base) or base
+        s = re.sub(r"[-_.%]+|20(?=[A-Z])", " ", base).strip()
         s = s.upper() if len(s) <= 3 else s.title()  # "hp" -> "HP", "black-forest-labs" -> "Black Forest Labs"
     if s.isupper() and len(s) > 5 and " " in s:
         s = s.title()

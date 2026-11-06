@@ -1193,10 +1193,10 @@ companies:
 - name: APPLY
   ats: lever
   slug: applydigital
-- name: Apply Here
+- name: ASU Prep
   ats: workday
   slug: asuprep.wd503.myworkdayjobs.com/ASUP
-- name: Apply With Us!
+- name: CNX
   ats: workday
   slug: cnx.wd1.myworkdayjobs.com/external_global
 - name: Appnovation Technologies
@@ -1424,7 +1424,7 @@ companies:
 - name: ASI
   ats: ashby
   slug: airspace-intelligence.com
-- name: Asia Pacific - Current Open Positions
+- name: Universal Music Group
   ats: workday
   slug: umusic.wd5.myworkdayjobs.com/UMGAPAC
 - name: Asian Health Services
@@ -1851,7 +1851,7 @@ companies:
 - name: Babbel
   ats: ashby
   slug: babbel
-- name: Babson College Temporary and Seasonal Openings
+- name: Babson College
   ats: workday
   slug: babson.wd1.myworkdayjobs.com/Temporary_Seasonal
 - name: Babylist
@@ -3028,34 +3028,34 @@ companies:
 - name: Tom Tailor
   ats: workday
   slug: tomtailorgroup.wd502.myworkdayjobs.com/TomTailor
-- name: Career Opportunities
+- name: Oak Valley Health
   ats: workday
   slug: oakvalleyhealth.wd10.myworkdayjobs.com/OakValleyHealth
-- name: Career@K+S
+- name: K+S
   ats: workday
   slug: kpluss.wd3.myworkdayjobs.com/Career-KplusS
-- name: Careers @ Carnegie Mellon
+- name: Carnegie Mellon
   ats: workday
   slug: cmu.wd115.myworkdayjobs.com/CMU
-- name: Careers @ Prysmian
+- name: Prysmian
   ats: workday
   slug: prysmiangroup.wd3.myworkdayjobs.com/Careers
-- name: Careers Page
+- name: Athenahealth
   ats: workday
   slug: athenahealth.wd1.myworkdayjobs.com/External
-- name: careers.
+- name: Lombard Odier
   ats: workday
   slug: lombardodier.wd3.myworkdayjobs.com/Lombard_Odier_Careers
-- name: 'CAREERS: Join + Build + Stay'
+- name: Oregon State University
   ats: workday
   slug: oregonstate.wd501.myworkdayjobs.com/OSU_Careers_Site
-- name: Careers@A+E
+- name: A+E
   ats: workday
   slug: aenetworks.wd1.myworkdayjobs.com/AE-Careers
 - name: NBT
   ats: workday
   slug: nbtbancorp.wd12.myworkdayjobs.com/NBT-B
-- name: Careers@WHOI
+- name: WHOI
   ats: workday
   slug: whoi.wd5.myworkdayjobs.com/WHOI-External
 - name: Careerswift
@@ -3791,7 +3791,7 @@ companies:
 - name: CNI
   ats: workday
   slug: cni.wd503.myworkdayjobs.com/CNI
-- name: Coachhub Careers
+- name: Coachhub
   ats: ashby
   slug: CoachHub%20Careers
 - name: Coalesce
@@ -4105,7 +4105,7 @@ companies:
 - name: Connecteam
   ats: greenhouse
   slug: connecteam
-- name: Connected Careers Page
+- name: Connected Cannabis
   ats: greenhouse
   slug: connectedcannabis
 - name: Connectedcannabisco
@@ -4560,7 +4560,7 @@ companies:
 - name: Current Global
   ats: greenhouse
   slug: currentglobal
-- name: Current Job Openings
+- name: Arbella Insurance
   ats: workday
   slug: arbella.wd5.myworkdayjobs.com/Arbella
 - name: Current Surgical Inc.
@@ -5579,7 +5579,7 @@ companies:
 - name: Energage
   ats: greenhouse
   slug: energage
-- name: Energize your career by applying today
+- name: Canadian Solar
   ats: workday
   slug: canadiansolar.wd5.myworkdayjobs.com/CanadianSolar
 - name: Energy Exemplar
@@ -5849,7 +5849,7 @@ companies:
 - name: EVERY™
   ats: greenhouse
   slug: theeverycompany
-- name: EVG Hidden (Job Links Only)
+- name: EVG
   ats: greenhouse
   slug: evgsn
 - name: EVG Specialty Network
@@ -5946,7 +5946,7 @@ companies:
 - name: ExtraHop
   ats: greenhouse
   slug: extrahopnetworks
-- name: Eye Care Partners Career Opportunities
+- name: Eye Care Partners
   ats: greenhouse
   slug: ecpcareers
 - name: Eye Security
@@ -6574,7 +6574,7 @@ companies:
 - name: Frgi
   ats: workday
   slug: frgi.wd1.myworkdayjobs.com/PolloTropical
-- name: From envisioning your career, To shaping it
+- name: BCF
   ats: workday
   slug: bcf.wd10.myworkdayjobs.com/BCF_CAREER_SITE
 - name: Frontera
@@ -6864,7 +6864,7 @@ companies:
 - name: Genworth Financial
   ats: workday
   slug: gnw.wd1.myworkdayjobs.com/GNW
-- name: Georgetown Career Opportunities
+- name: Georgetown
   ats: workday
   slug: georgetown.wd1.myworkdayjobs.com/Georgetown_Admin_Careers
 - name: Georgia Auto Pawn, Inc
@@ -8327,7 +8327,7 @@ companies:
 - name: Insurity India
   ats: greenhouse
   slug: insurityindia
-- name: Intact Career Hub
+- name: Intact
   ats: workday
   slug: intactfc.wd3.myworkdayjobs.com/intactfc
 - name: Integra FEC
@@ -8612,13 +8612,13 @@ companies:
 - name: JM Family
   ats: workday
   slug: jmfamily.wd1.myworkdayjobs.com/jmfamily_external
-- name: Job Market
+- name: ZEISS
   ats: workday
   slug: zeissgroup.wd3.myworkdayjobs.com/External
-- name: Job Openings
+- name: Bürkert
   ats: workday
   slug: burkert.wd502.myworkdayjobs.com/burkert-career
-- name: Job Opportunities
+- name: Stora Enso
   ats: workday
   slug: storaenso.wd502.myworkdayjobs.com/Stora_Enso_site_opportunities
 - name: Jobber
@@ -8642,28 +8642,28 @@ companies:
 - name: Johnson & Johnson
   ats: workday
   slug: jj.wd5.myworkdayjobs.com/JJ
-- name: Join our team!
+- name: New Charter Technologies
   ats: workday
   slug: newchartertech.wd12.myworkdayjobs.com/NewCharterTechnologies
-- name: Join the Miele Team!
+- name: Miele
   ats: workday
   slug: miele.wd3.myworkdayjobs.com/miele-jobs
-- name: Join the PUMA Team!
+- name: PUMA
   ats: workday
   slug: puma.wd502.myworkdayjobs.com/Jobs_at_Puma
-- name: Join the team making a genuine difference
+- name: Genuine Parts Company
   ats: workday
   slug: genpt.wd1.myworkdayjobs.com/Careers
-- name: Join the WRIGHT Team!
+- name: Curtiss-Wright
   ats: workday
   slug: curtisswright.wd1.myworkdayjobs.com/CW_External_Career_Site
 - name: Husqvarnagroup
   ats: workday
   slug: husqvarnagroup.wd3.myworkdayjobs.com/External_Career_Site
-- name: Join Us At PCC
+- name: Portland Community College
   ats: workday
   slug: portlandcc.wd12.myworkdayjobs.com/External
-- name: Join us today
+- name: Washington University in St. Louis
   ats: workday
   slug: wustl.wd1.myworkdayjobs.com/External
 - name: JOLT
@@ -9543,7 +9543,7 @@ companies:
 - name: Loyal
   ats: greenhouse
   slug: loyal36
-- name: LP Careers Page
+- name: Launch Potato
   ats: greenhouse
   slug: launchpotato
 - name: LPL Financial Holdings
@@ -11463,7 +11463,7 @@ companies:
 - name: Open Fertility
   ats: greenhouse
   slug: openfertility
-- name: Open positions
+- name: Aalto University
   ats: workday
   slug: aalto.wd3.myworkdayjobs.com/aalto
 - name: Open Standard
@@ -12866,7 +12866,7 @@ companies:
 - name: Radiant Industries
   ats: ashby
   slug: radiant-industries
-- name: Radical Health Careers
+- name: Radical Health
   ats: ashby
   slug: radical-health
 - name: Radicle Health
@@ -13790,7 +13790,7 @@ companies:
 - name: SBI Growth
   ats: greenhouse
   slug: sbigrowth
-- name: Scale Army Careers
+- name: Scale Army
   ats: ashby
   slug: Scale%20Army%20Careers
 - name: Scale Microgrid Solutions
@@ -14512,7 +14512,7 @@ companies:
 - name: Sony Interactive Entertainment Inc.
   ats: greenhouse
   slug: siei
-- name: Sony Music Careers - Asia & Middle East
+- name: Sony Music
   ats: greenhouse
   slug: sonymusicasiacareers
 - name: Sony Music Entertainment Canada
@@ -14729,7 +14729,7 @@ companies:
 - name: Staff Employment Opportunities
   ats: workday
   slug: wfu.wd1.myworkdayjobs.com/Staff_Career_Website_live
-- name: Staff Openings
+- name: University of Mississippi
   ats: workday
   slug: olemiss.wd12.myworkdayjobs.com/External__Staff
 - name: Staffbase
@@ -14892,7 +14892,7 @@ companies:
 - name: Strata Information Group
   ats: greenhouse
   slug: stratainformationgroup
-- name: Strategic HR Client Job Openings
+- name: Strategic HR
   ats: greenhouse
   slug: strategichr
 - name: Stratolaunch
@@ -15494,7 +15494,7 @@ companies:
 - name: The Brattle Group
   ats: greenhouse
   slug: thebrattlegroup
-- name: The City of Baltimore Job Opportunities
+- name: City of Baltimore
   ats: workday
   slug: baltimorecity.wd1.myworkdayjobs.com/External
 - name: The City of Fort Worth
@@ -16446,7 +16446,7 @@ companies:
 - name: UVIMCO
   ats: greenhouse
   slug: uvimco
-- name: Vacancies
+- name: Mabanaft
   ats: workday
   slug: mabanaft.wd3.myworkdayjobs.com/Mabanaft
 - name: Vail Health Hospital
@@ -17300,7 +17300,7 @@ companies:
 - name: Xero
   ats: ashby
   slug: xero
-- name: XM Careers
+- name: XM
   ats: lever
   slug: xm
   lever_region: eu

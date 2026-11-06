@@ -69,7 +69,19 @@ INTERN_ADJACENT_JOB = re.compile(
     r"\b(interns|internships|intern(ship)? programs?)\b",
     re.I,
 )
-INTERN_EMPLOYMENT = re.compile(r"\b(intern(ship)?|co-?op|student|temporary student)\b", re.I)
+# Employment types. "Intern"/"Co-op" are decisive; "Student" alone isn't: universities tag
+# teaching-assistant and campus jobs "Student (Fixed Term)", so it needs an internship-like title.
+INTERN_EMPLOYMENT = re.compile(r"\b(intern(ship)?s?|co-?op)\b", re.I)
+STUDENT_EMPLOYMENT = re.compile(r"\bstudents?\b", re.I)
+NEGATED_EMPLOYMENT = re.compile(r"\bnon[- ]?(intern(ship)?|student)s?\b", re.I)  # "Non-Intern"
+STUDENTISH_TITLE = re.compile(
+    r"\b(placement|thesis|werkstudent\w*|praktik\w*|stage|stagiaire|trainee|apprentice\w*|"
+    r"summer|fall|autumn|winter|spring)\b", re.I)
+# On-campus student jobs: a term in the title ("CUPE - Winter 2027 - TA") doesn't make them
+# internships.
+CAMPUS_JOB = re.compile(
+    r"\b(TA|teaching|tutor\w*|corrector|grader|marker|assistantships?|demonstrator|invigilator|"
+    r"lab monitor|residence|resident assistant|front desk|cupe|scfp)\b", re.I)
 DESC_STRONG = re.compile(
     r"\b(this (is an? )?(paid )?internship|our internship|\d{1,2}[- ](?:to[- ]\d{1,2}[- ])?week"
     r" internship|internship (program|position|role) (is|runs|will)|as an intern\b|"
@@ -101,7 +113,12 @@ def detect_internship(p: Posting) -> tuple[bool, list[str]]:
     if SENIOR_TITLE.search(title):
         return False, [f"title is a senior role ('{title}')"]
 
-    if p.employment_type and INTERN_EMPLOYMENT.search(p.employment_type):
+    if CAMPUS_JOB.search(title):
+        return False, [f"title is an on-campus student job ('{title}')"]
+
+    etype = NEGATED_EMPLOYMENT.sub("", p.employment_type or "")
+    if INTERN_EMPLOYMENT.search(etype) or \
+            (STUDENT_EMPLOYMENT.search(etype) and STUDENTISH_TITLE.search(title)):
         return True, [f"employment type is '{p.employment_type}'"]
 
     # "FPGA Associate (Summer 2027)": a season + year in the title, with no sign it's a

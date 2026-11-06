@@ -980,7 +980,7 @@ companies:
   note: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
 - name: Shield AI
   ats: ashby
-  slug: shieldai
+  slug: shield
   tags:
   - defense
   - robotics

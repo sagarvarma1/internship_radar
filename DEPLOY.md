@@ -3,8 +3,9 @@
 Radar needs three things from a host:
 
 1. A long-running **web process** (`radar serve --port $PORT`).
-2. A **scheduled job every minute** (`radar poll`, ~35 s per run; a run skips itself if the
-   previous one is still going).
+2. A **scheduled job every minute** (`radar poll`: 25-50 s per run, hard-capped at ~50 s; a run
+   skips itself if the previous one is still going). It makes ~15-30 outbound requests/second to
+   the job-board APIs at peak.
 3. A **persistent disk** shared by both, holding one SQLite file (`RADAR_DB`, WAL mode, so the web
    app and poller can use it at the same time). It holds user accounts, so back it up.
 

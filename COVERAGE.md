@@ -1,31 +1,32 @@
 # Internship Radar coverage report
 
-Companies in registry: 233 (192 tracked, 41 unsupported)
-Tracked per ATS: ashby 94, greenhouse 90, lever 8
-Open postings tracked: 29241
-Open internships: 932 at 75 companies
+Companies in registry: 6062 (6022 tracked, 40 unsupported)
+Tracked per ATS: ashby 1419, greenhouse 3209, lever 323, workday 1071
+Open postings tracked: 230111
+Open internships: 16307 at 1574 companies
 Users: 1
-Last poll: 2026-11-05T18:54:59+00:00 (192 ok, 0 failed)
+Last poll: 2026-11-06T19:01:15+00:00 (1276 ok, 0 failed)
 
 ## Most internships
-- Astranis: 90
-- Rocket Lab: 80
-- Zipline: 67
-- Waymo: 61
-- Palantir: 50
-- Jane Street: 41
-- Anduril: 40
-- Jump Trading: 28
-- Coinbase: 27
-- Varda: 26
-- Shield AI: 25
-- Skydio: 24
-- IMC Trading: 20
-- Lyft: 19
-- Stripe: 18
+- Procter & Gamble: 238
+- NVIDIA: 218
+- GE Vernova: 183
+- Hewlett Packard Enterprise: 179
+- RTX: 175
+- Sanofi: 171
+- PWC: 154
+- Ocbc: 149
+- Stryker: 146
+- Trane Technologies: 143
+- Micron Technology: 143
+- Hitachi: 132
+- ASML: 129
+- Hewlett Packard: 124
+- HNTB: 124
 
 ## Broken boards
-- none
+- NJIT (workday:njit.wd108.myworkdayjobs.com/NJIT_Careers): 9 failures, HTTP 401
+- Parloa (greenhouse:parloa): 9 failures, HTTP 404
 
 ## Unsupported companies
 - Adobe: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
@@ -55,7 +56,6 @@ Last poll: 2026-11-05T18:54:59+00:00 (192 ok, 0 failed)
 - Microsoft: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
 - Mistral AI: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
 - Netflix: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
-- NVIDIA: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
 - Oracle: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
 - Postman: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)
 - Qualcomm: No board found on Ashby, Greenhouse or Lever (probed name-based slugs)

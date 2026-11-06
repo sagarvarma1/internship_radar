@@ -243,3 +243,36 @@ def test_delete_user_cascades(conn):
     db.delete_user(conn, uid)
     for table in ("users", "sessions", "user_postings"):
         assert conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0
+
+
+def test_removed_board_postings_are_closed(tmp_path):
+    from internship_radar import db
+    from internship_radar.filters import analyze
+    from internship_radar.models import ATS, Company, Posting
+    conn = db.connect(tmp_path / "r.db")
+    old, new = Company("Acme", ATS.ASHBY, "acme-old"), Company("Acme", ATS.ASHBY, "acme")
+    db.sync_registry(conn, [old])
+    p = Posting(ATS.ASHBY, "1", "Acme", old.key, "Software Engineer Intern", "https://x")
+    db.apply_snapshot(conn, old.key, None, [(p, analyze(p))])
+    db.sync_registry(conn, [new])  # slug moved
+    assert conn.execute("SELECT COUNT(*) FROM postings WHERE closed_at IS NULL").fetchone()[0] == 0
+
+
+def test_descriptions_kept_only_where_they_matter_and_old_closed_rows_pruned(tmp_path):
+    from datetime import UTC, datetime, timedelta
+    from internship_radar import db
+    from internship_radar.filters import analyze
+    from internship_radar.models import ATS, Company, Posting
+    conn = db.connect(tmp_path / "d.db")
+    c = Company("Acme", ATS.ASHBY, "acme")
+    db.sync_registry(conn, [c])
+    mk = lambda i, t: Posting(ATS.ASHBY, str(i), "Acme", c.key, t, "https://x", description="long text " * 50)
+    ps = [mk(1, "Software Engineer Intern"), mk(2, "Senior Accountant"), mk(3, "Student Ambassador")]
+    db.apply_snapshot(conn, c.key, None, [(p, analyze(p)) for p in ps])
+    desc = dict(conn.execute("SELECT source_id, length(description) FROM postings"))
+    assert desc["1"] > 0 and desc["2"] == 0 and desc["3"] > 0
+    db.apply_snapshot(conn, c.key, None, [])  # everything closes
+    old = (datetime.now(UTC) - timedelta(days=8)).isoformat(timespec="seconds")
+    conn.execute("UPDATE postings SET closed_at=?", (old,))
+    db.cleanup(conn)
+    assert [r[0] for r in conn.execute("SELECT source_id FROM postings")] == ["1"]  # internship kept

@@ -206,3 +206,20 @@ def test_config_rejects_unknown_keys():
         FilterConfig.from_dict({"role_type": ["swe"]})  # typo
     cfg = FilterConfig.from_dict({"role_weights": {"swe": 30}})
     assert cfg.role_weights["swe"] == 30 and cfg.role_weights["ml"] == 25
+
+
+@pytest.mark.parametrize("title,etype,expected", [
+    ("Experienced Operator", "Fixed Term Employee (Non-Intern) (Fixed Term)", False),
+    ("CUPE - Winter 2027 - TA - ECO2151 B00", "Student (Fixed Term)", False),
+    ("Library Assistant", "Student Workers", False),
+    ("Hourly Lab Technician", "Non Student Hourly Staff JFG", False),
+    ("Referendar (w/m/d) Banking & Finance", "Legal Specialists & Law Student/Graduates", False),
+    ("Finance Trainee", "Intern (Fixed Term) (Trainee)", True),
+    ("Process Engineering Placement", "Student (Fixed Term)", True),
+    ("Juriste - Stage - H/F", "Student", True),
+    ("HR Consultant - Stage", "Intern (Fixed Term) (Trainee)", True),
+])
+def test_employment_type_signals(title, etype, expected):
+    from internship_radar.models import ATS, Posting
+    p = Posting(ATS.WORKDAY, "x", "1", "X", title, "", employment_type=etype)
+    assert detect_internship(p)[0] is expected

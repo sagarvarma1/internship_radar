@@ -19,7 +19,7 @@ h2 { font-size: 16px; margin: 28px 0 10px; }
 {% endblock %}
 {% block body %}
 <h1>Companies we watch</h1>
-<p class="muted" style="margin:0">Companies with internships open are checked every minute; the rest at least every 15 minutes, so a company's first internship is still caught fast. Last check {{ stats.last_poll | age }}{% if stats.last_poll and stats.last_poll|age != "now" %} ago{% endif %}.</p>
+<p class="muted" style="margin:0">Companies with internships open are checked every minute; the rest every 15 minutes (hourly if they have no jobs at all), so a company's first internship is still caught fast. Last check {{ stats.last_poll | age }}{% if stats.last_poll and stats.last_poll|age != "now" %} ago{% endif %}.</p>
 <div class="stats">
   <div class="stat card"><b>{{ total_boards }}</b><span>companies watched</span></div>
   <div class="stat card"><b>{{ rows|length }}</b><span>hiring interns now</span></div>

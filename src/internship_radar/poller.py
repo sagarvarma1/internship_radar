@@ -49,7 +49,26 @@ def _due(state: sqlite3.Row | None, settings: Settings, at: datetime) -> bool:
         )
         return at - datetime.fromisoformat(state["last_error_at"]) >= wait
     # 10 s of slack so a board polled at 12:00:03 is due again at the 12:01:00 run
-    return at - datetime.fromisoformat(state["last_polled_at"]) >= tier_interval(state, settings, at) - timedelta(seconds=10)
+    return overdue(state, settings, at) >= 0
+
+
+def _interval(state: sqlite3.Row, settings: Settings, at: datetime) -> timedelta:
+    """The board's tier interval. Slower tiers get a fixed per-board spread of +-15% so boards
+    baselined together don't all come due in the same minute forever after."""
+    interval = tier_interval(state, settings, at)
+    if interval > timedelta(minutes=settings.poll.interval_minutes):
+        interval *= 0.85 + 0.3 * stagger_offset(state["key"], 1.0)
+    return interval
+
+
+def overdue(state: sqlite3.Row | None, settings: Settings, at: datetime) -> float:
+    """How late a board is, in units of its own interval (0 = due now, 1 = a whole interval
+    late). Used to order a run so a backlog of 15-minute boards can't starve 1-minute ones."""
+    if state is None or not state["last_polled_at"]:
+        return float("inf")
+    interval = _interval(state, settings, at)
+    late = at - datetime.fromisoformat(state["last_polled_at"]) - interval + timedelta(seconds=10)
+    return late / interval
 
 
 def stagger_offset(key: str, window: float) -> float:
@@ -95,8 +114,9 @@ async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str
     at = datetime.now(UTC)
     states = {c.key: db.get_company_state(conn, c.key) for c in targets}
     targets = [c for c in targets if _due(states[c.key], settings, at)]
-    # most overdue first, so if a run hits its deadline the boards it skipped go first next time
-    targets.sort(key=lambda c: (states[c.key]["last_polled_at"] or "") if states[c.key] else "")
+    # most overdue (relative to each board's interval) first, so if a run hits its deadline the
+    # boards it skipped go first next time, and 1-minute boards are never stuck behind slow tiers
+    targets.sort(key=lambda c: -overdue(states[c.key], settings, at))
 
     # Polling every minute: never overlap with a run that's still going (a crashed run that never
     # finished stops blocking after 5 minutes).
@@ -112,22 +132,38 @@ async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str
 
     own_fetcher = fetcher is None
     fetcher = fetcher or Fetcher(limiter=HostLimiter(settings.poll.per_host_interval_seconds))
-    sem = asyncio.Semaphore(settings.poll.concurrency)
+    # One pool per ATS: Workday has no ETags and ~1 s latency, and with a shared pool its polls
+    # would hold every slot while Greenhouse/Ashby (mostly fast 304s) waited behind them. Rate
+    # limits per host/cluster (fetch.HOST_GROUPS) are what keep each API's load polite.
+    sems = {ats: asyncio.Semaphore(settings.poll.concurrency) for ats in ATS}
     start = time.monotonic()
 
     deadline = settings.poll.deadline_seconds
 
+    # A poll may still be running when the deadline passes; it gets this much longer, then it's
+    # cancelled and the board is retried first next run (writes happen in synchronous blocks
+    # between awaits, so cancelling never leaves a half-applied snapshot).
+    grace = 4
+
+    def out_of_time() -> bool:
+        return bool(deadline) and time.monotonic() - start > deadline
+
     async def one(c: Company) -> dict:
-        if deadline and time.monotonic() - start > deadline:
-            # out of time for this minute: leave it for the next run (it's now the most overdue)
-            return {"company": c.name, "status": "deferred"}
         if spread_seconds:
             delay = stagger_offset(c.key, spread_seconds) - (time.monotonic() - start)
             if delay > 0:
                 await asyncio.sleep(delay)
-        async with sem:
+        async with sems[c.ats]:
+            # checked after getting a slot: checking before would let every queued board through
+            if out_of_time():
+                return {"company": c.name, "status": "deferred"}
             try:
-                return await poll_company(conn, fetcher, c, settings)
+                if not deadline:
+                    return await poll_company(conn, fetcher, c, settings)
+                left = deadline + grace - (time.monotonic() - start)
+                return await asyncio.wait_for(poll_company(conn, fetcher, c, settings), left)
+            except TimeoutError:
+                return {"company": c.name, "status": "deferred", "timed_out": True}
             except Exception as e:  # one bad board must never stop the cycle
                 db.record_failure(conn, c.key, f"{type(e).__name__}: {e}")
                 return {"company": c.name, "status": "error", "error": str(e)}
@@ -145,6 +181,7 @@ async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str
     db.cleanup(conn)
 
     deferred = sum(r["status"] == "deferred" for r in results)
+    timed_out = [r["company"] for r in results if r.get("timed_out")]
     results = [r for r in results if r["status"] != "deferred"]
     ok = sum(r["status"] != "error" for r in results)
     summary = {
@@ -156,6 +193,7 @@ async def poll_all(settings: Settings, spread_seconds: float = 0, only: list[str
         "new_internships": sum(r.get("new_internships", 0) for r in results),
         "closed": sum(r.get("closed", 0) for r in results),
         "seconds": round(time.monotonic() - start, 1),
+        "timed_out": timed_out,
         "alerts": alert_status,
         "errors": [f"{r['company']}: {r.get('error')}" for r in results if r["status"] == "error"],
     }
